@@ -24,6 +24,10 @@ public class TweenExample : MonoBehaviour
                 Debug.Log("Start");
                 dir = Vector2.right;
             })
+            .OnUpdate((t) =>
+            {
+                pos += dir * Time.deltaTime;
+            })
             .OnRepeat((l) =>
             {
                 Debug.Log("Repeat: " + l);
@@ -31,12 +35,6 @@ public class TweenExample : MonoBehaviour
                 if (l == 2) dir = Vector2.left;
                 if (l == 3) dir = Vector2.down;
             });
-
-        tween.OnUpdate((t) =>
-        {
-            pos += dir * Time.deltaTime;
-            Debug.Log("Update: " + tween.CurrentLoop);
-        });
 
         tween.OnComplete(() =>
         {
@@ -50,21 +48,29 @@ public class TweenExample : MonoBehaviour
             }));
         });
 
-        Core.Juggler.Add(new Tween()
-            .Time(0.5f)
-            .Random(0.5f)
-            .OnRepeat(l => isSolid = !isSolid)
-            .Loop(-1));
+        Core.Juggler.Add(
+            new Tween().Time(1f).OnStart(() => color = Color.red).Next(
+            new Tween().Time(1f).OnStart(() => color = Color.green).Next(
+            new Tween().Time(1f).OnStart(() => color = Color.yellow).Next(
+            new Tween().Time(1f).OnStart(() => color = Color.magenta).OnComplete(() => color = Color.cyan)
+                .Next(new Tween().Time(1f).OnComplete(() =>
+                {
+                    Core.Juggler.Add(new Tween()
+                        .Time(0.5f)
+                        .Random(0.5f)
+                        .OnRepeat(l => isSolid = !isSolid)
+                        .Loop(-1));
+
+                    Core.Juggler.Add(tween);
+                }))
+        ))));
 
         Core.Juggler.Add(new Tween()
             .OnUpdate(_ =>
             {
-                Debug.Log("Iggy");
                 Time.timeScale = Input.GetMouseButton(0) ? 4f : 1f;
             })
             .Time(1000f));
-
-        Core.Juggler.Add(tween);
     }
 
     void Update()

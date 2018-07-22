@@ -19,6 +19,8 @@ namespace Momentum
         [SerializeField] int _loops = 0;
         [SerializeField] int _currentLoops = 0;
 
+        [SerializeField] Tween _next = null;
+
         System.Action _onStart;
         System.Action<float> _onUpdate;
         System.Action<int> _onRepeat;
@@ -63,6 +65,12 @@ namespace Momentum
             {
                 _loops = loops;
             }
+            return this;
+        }
+
+        public Tween Next(Tween tween)
+        {
+            _next = tween;
             return this;
         }
 
@@ -114,7 +122,10 @@ namespace Momentum
                 if (_currentLoops == _loops)
                 {
                     _isActive = false;
+
                     if (_onComplete != null) _onComplete();
+
+                    if (_next != null) Core.Juggler.Add(_next);
                 }
                 else if (_currentLoops < _loops)
                 {
