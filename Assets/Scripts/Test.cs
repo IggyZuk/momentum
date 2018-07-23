@@ -20,40 +20,65 @@ public class Test : MonoBehaviour
     void TestMoveAndScale()
     {
         bool positiveDirection = true;
+        Color prevColor = Color.white;
+        Color nextColor = Color.red;
 
         Task.Add()
             .Name("L/R")
             .Time(0.5f)
             .Loop(3)
-            .Random(0.3f)
+            .Random(0f)
             .OnUpdate(task =>
             {
                 Vector3 p = Vector3.LerpUnclamped(
-                    pos1,
-                    pos2,
-                    Ease.InOutBack(positiveDirection ? task.progress : 1f - task.progress)
+                    positiveDirection ? pos1 : pos2,
+                    positiveDirection ? pos2 : pos1,
+                    Ease.OutBack(task.progress)
                 );
-
                 this.transform.position = p;
+
+                Color c = Color.LerpUnclamped(
+                    prevColor,
+                    nextColor,
+                    Ease.OutBack(task.progress)
+                );
+                this.GetComponent<MeshRenderer>().material.color = c;
             })
             .OnRepeat(task =>
             {
+                prevColor = nextColor;
+                nextColor = new Color(Random.value, Random.value, Random.value);
                 positiveDirection = !positiveDirection;
 
             })
             .OnComplete(task =>
             {
                 Task.Add()
-                    .Name("Boom: " + task.currentLoop)
+                    .Name("Wait/Scale")
                     .Time(1)
+                    .Random(0.7f)
                     .OnComplete(_ =>
                     {
                         positiveDirection = true;
-                        this.transform.localScale = this.transform.localScale * 1.1f;
+                        var oldScale = this.transform.localScale;
+                        var newScale = this.transform.localScale * 1.1f;
 
                         Task.Add()
-                           .Name("Scale")
-                           .Time(1)
+                           .Name("Smooth Scale")
+                           .Time(0.5f)
+                           .OnUpdate(__ =>
+                           {
+                               var s = Vector3.LerpUnclamped(
+                                   oldScale,
+                                   newScale,
+                                   Ease.InOutBack(__.progress)
+                               );
+                               this.transform.localScale = s;
+                           });
+
+                        Task.Add()
+                           .Name("Wait/Loop")
+                           .Time(1f)
                            .OnComplete(__ => Core.Juggler.Add(task));
                     });
             });
@@ -100,10 +125,6 @@ public class Test : MonoBehaviour
             {
                 Time.timeScale = Input.GetMouseButton(0) ? 4f : 1f;
             });
-
-        Task.Add()
-            .Name("Check")
-            .Time(1000);
     }
 
     void TestMoveSquare()
