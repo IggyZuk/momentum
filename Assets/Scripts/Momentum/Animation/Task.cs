@@ -83,6 +83,7 @@ namespace Momentum
             return this;
         }
 
+        // TODO: have multiple children; go one by one though them
         public Task Next(Task task)
         {
             _next = task;

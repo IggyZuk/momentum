@@ -3,18 +3,38 @@ using Momentum;
 
 public class Test : MonoBehaviour
 {
+
     void Awake()
     {
         //TestMoveDelay();
         //TestSwitchPositionsFromList();
         //TestMoveSquare();
-        TestTurbo();
+        //TestTurbo();
+        //TestCircle();
 
-        Task.Add()
-            .Name("Check")
-            .Time(1000);
+        bool isAttacking = false;
 
+        var attack =
+            new Task().Name("Prepare").Time(1f).OnStart(() => isAttacking = true).Next(
+            new Task().Name("Attack").Time(0.5f).Next(
+            new Task().Name("Cooldown").Time(2f).OnComplete(() => isAttacking = false)));
+
+        Task.Add().Loop(-1).OnRepeat(_ =>
+        {
+            if (Input.GetMouseButton(0))
+            {
+                if (!isAttacking)
+                {
+                    Core.Juggler.Add(attack);
+                }
+            }
+        });
+    }
+
+    void TestCircle()
+    {
         Task.Add()
+            .Name("Circle Movement")
             .Loop(-1)
             .OnRepeat(i =>
             {
@@ -31,6 +51,10 @@ public class Test : MonoBehaviour
             {
                 Time.timeScale = Input.GetMouseButton(0) ? 4f : 1f;
             });
+
+        Task.Add()
+            .Name("Check")
+            .Time(1000);
     }
 
     void TestMoveSquare()
