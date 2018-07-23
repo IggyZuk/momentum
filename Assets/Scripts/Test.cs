@@ -3,21 +3,70 @@ using Momentum;
 
 public class Test : MonoBehaviour
 {
+    [SerializeField] Vector3 pos1;
+    [SerializeField] Vector3 pos2;
 
     void Awake()
     {
         //TestMoveDelay();
         //TestSwitchPositionsFromList();
         //TestMoveSquare();
-        //TestTurbo();
+        TestTurbo();
         //TestCircle();
+        //TestAttack();
+        TestMoveAndScale();
+    }
 
+    void TestMoveAndScale()
+    {
+        bool positiveDirection = true;
+
+        Task.Add()
+            .Name("L/R")
+            .Time(0.5f)
+            .Loop(3)
+            .Random(0.3f)
+            .OnUpdate(task =>
+            {
+                Vector3 p = Vector3.LerpUnclamped(
+                    pos1,
+                    pos2,
+                    Ease.InOutBack(positiveDirection ? task.progress : 1f - task.progress)
+                );
+
+                this.transform.position = p;
+            })
+            .OnRepeat(task =>
+            {
+                positiveDirection = !positiveDirection;
+
+            })
+            .OnComplete(task =>
+            {
+                Task.Add()
+                    .Name("Boom: " + task.currentLoop)
+                    .Time(1)
+                    .OnComplete(_ =>
+                    {
+                        positiveDirection = true;
+                        this.transform.localScale = this.transform.localScale * 1.1f;
+
+                        Task.Add()
+                           .Name("Scale")
+                           .Time(1)
+                           .OnComplete(__ => Core.Juggler.Add(task));
+                    });
+            });
+    }
+
+    void TestAttack()
+    {
         bool isAttacking = false;
 
         var attack =
-            new Task().Name("Prepare").Time(1f).OnStart(() => isAttacking = true).Next(
+            new Task().Name("Prepare").Time(1f).OnStart(_ => isAttacking = true).Next(
             new Task().Name("Attack").Time(0.5f).Next(
-            new Task().Name("Cooldown").Time(2f).OnComplete(() => isAttacking = false)));
+            new Task().Name("Cooldown").Time(2f).OnComplete(_ => isAttacking = false)));
 
         Task.Add().Loop(-1).OnRepeat(_ =>
         {
@@ -36,9 +85,9 @@ public class Test : MonoBehaviour
         Task.Add()
             .Name("Circle Movement")
             .Loop(-1)
-            .OnRepeat(i =>
+            .OnRepeat(task =>
             {
-                this.transform.position = new Vector3(Mathf.Cos(i * 0.25f), Mathf.Sin(i * 0.25f), 0f);
+                this.transform.position = new Vector3(Mathf.Cos(task.currentLoop * 0.25f), Mathf.Sin(task.currentLoop * 0.25f), 0f);
             });
     }
 
@@ -108,7 +157,7 @@ public class Test : MonoBehaviour
 
                 Task.Add()
                     .Time(1f)
-                    .OnComplete(() => this.transform.position = pos);
+                    .OnComplete(_ => this.transform.position = pos);
             }
         });
     }

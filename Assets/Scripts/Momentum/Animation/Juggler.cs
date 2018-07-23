@@ -25,7 +25,7 @@ namespace Momentum
                 Task task = _tasks[i];
                 task.Update(deltaTime);
 
-                if (!task.IsActive)
+                if (!task.isActive)
                 {
                     task.Reset();
                     Remove(task);

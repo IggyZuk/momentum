@@ -209,6 +209,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8057ffc0fca99443a8211c2bd492dfd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pos1: {x: -3, y: 0, z: 0}
+  pos2: {x: 3, y: 0, z: 0}
 --- !u!135 &109350571
 SphereCollider:
   m_ObjectHideFlags: 0

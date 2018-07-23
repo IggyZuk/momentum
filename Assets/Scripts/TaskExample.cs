@@ -15,7 +15,7 @@ public class TaskExample : MonoBehaviour
             .Delay(1f)
             .Time(1f)
             .Loop(3)
-            .OnStart(() =>
+            .OnStart(_ =>
             {
                 Debug.Log("Start");
                 dir = Vector2.right;
@@ -24,20 +24,20 @@ public class TaskExample : MonoBehaviour
             {
                 pos += dir * Time.deltaTime;
             })
-            .OnRepeat((l) =>
+            .OnRepeat(_ =>
             {
-                Debug.Log("Repeat: " + l);
-                if (l == 1) dir = Vector2.up;
-                if (l == 2) dir = Vector2.left;
-                if (l == 3) dir = Vector2.down;
+                Debug.Log("Repeat: " + _.currentLoop);
+                if (_.currentLoop == 1) dir = Vector2.up;
+                if (_.currentLoop == 2) dir = Vector2.left;
+                if (_.currentLoop == 3) dir = Vector2.down;
             });
 
-        task.OnComplete(() =>
+        task.OnComplete(_ =>
         {
             Debug.Log("Restart");
             task.Reset();
 
-            Core.Juggler.Add(new Task().Time(3f).OnComplete(() =>
+            Core.Juggler.Add(new Task().Time(3f).OnComplete(__ =>
             {
                 color = new Color(Random.value, Random.value, Random.value);
                 Debug.Log("Boom!");
@@ -45,11 +45,11 @@ public class TaskExample : MonoBehaviour
         });
 
         Core.Juggler.Add(
-            new Task().Time(1f).OnStart(() => color = Color.red).Next(
-            new Task().Time(1f).OnStart(() => color = Color.green).Next(
-            new Task().Time(1f).OnStart(() => color = Color.yellow).Next(
-            new Task().Time(1f).OnStart(() => color = Color.magenta).OnComplete(() => color = Color.cyan)
-                .Next(new Task().Time(1f).OnComplete(() =>
+            new Task().Time(1f).OnStart(_ => color = Color.red).Next(
+            new Task().Time(1f).OnStart(_ => color = Color.green).Next(
+            new Task().Time(1f).OnStart(_ => color = Color.yellow).Next(
+            new Task().Time(1f).OnStart(_ => color = Color.magenta).OnComplete(_ => color = Color.cyan)
+                .Next(new Task().Time(1f).OnComplete(_ =>
                 {
                     Core.Juggler.Add(new Task()
                         .Time(0.5f)

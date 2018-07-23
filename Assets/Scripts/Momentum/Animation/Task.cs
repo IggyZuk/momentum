@@ -23,21 +23,22 @@ namespace Momentum
 
         [SerializeField] Task _next = null;
 
-        System.Action _onStart;
-        System.Action<float> _onUpdate;
-        System.Action<int> _onRepeat;
-        System.Action _onComplete;
+        System.Action<Task> _onStart;
+        System.Action<Task> _onUpdate;
+        System.Action<Task> _onRepeat;
+        System.Action<Task> _onComplete;
 
-        public bool IsActive { get { return _isActive; } }
+        public bool isActive { get { return _isActive; } }
 
-        public float CurrentTime { get { return _currentTime; } }
-        public float TotalTime { get { return _time; } }
+        public float currentTime { get { return _currentTime; } }
+        public float time { get { return _time + _currentRandom; } }
+        public float progress { get { return _currentTime / Mathf.Clamp(Mathf.Epsilon, time, time); } }
 
-        public float CurrentDelay { get { return _currentDelay; } }
-        public float TotalDelay { get { return _delay; } }
+        public float currentDelay { get { return _currentDelay; } }
+        public float delay { get { return _delay; } }
 
-        public float CurrentLoop { get { return _currentLoops; } }
-        public float TotalLoops { get { return _loops; } }
+        public float currentLoop { get { return _currentLoops; } }
+        public float loops { get { return _loops; } }
 
         public static Task Add()
         {
@@ -90,25 +91,25 @@ namespace Momentum
             return this;
         }
 
-        public Task OnStart(System.Action callback)
+        public Task OnStart(System.Action<Task> callback)
         {
             _onStart = callback;
             return this;
         }
 
-        public Task OnUpdate(System.Action<float> callback)
+        public Task OnUpdate(System.Action<Task> callback)
         {
             _onUpdate = callback;
             return this;
         }
 
-        public Task OnComplete(System.Action callback)
+        public Task OnComplete(System.Action<Task> callback)
         {
             _onComplete = callback;
             return this;
         }
 
-        public Task OnRepeat(System.Action<int> callback)
+        public Task OnRepeat(System.Action<Task> callback)
         {
             _onRepeat = callback;
             return this;
@@ -126,20 +127,20 @@ namespace Momentum
             {
                 _currentRandom = UnityEngine.Random.Range(-_random, _random);
 
-                if (_onStart != null) _onStart();
+                if (_onStart != null) _onStart(this);
             }
 
             _currentTime += deltaTime;
 
-            if (_onUpdate != null) _onUpdate(_currentTime);
+            if (_onUpdate != null) _onUpdate(this);
 
-            if (_currentTime >= _time + _currentRandom)
+            if (_currentTime >= time)
             {
                 if (_currentLoops == _loops)
                 {
                     _isActive = false;
 
-                    if (_onComplete != null) _onComplete();
+                    if (_onComplete != null) _onComplete(this);
 
                     if (_next != null) Core.Juggler.Add(_next);
                 }
@@ -153,7 +154,7 @@ namespace Momentum
 
                     if (_currentLoops <= _loops)
                     {
-                        if (_onRepeat != null) _onRepeat(_currentLoops);
+                        if (_onRepeat != null) _onRepeat(this);
                     }
                 }
             }
