@@ -3,9 +3,11 @@
 namespace Momentum
 {
     [System.Serializable]
-    public class Tween
+    public class Task
     {
         [SerializeField] bool _isActive = true;
+
+        [SerializeField] string _name = string.Empty;
 
         [SerializeField] float _time = 0f;
         [SerializeField] float _currentTime = 0f;
@@ -19,7 +21,7 @@ namespace Momentum
         [SerializeField] int _loops = 0;
         [SerializeField] int _currentLoops = 0;
 
-        [SerializeField] Tween _next = null;
+        [SerializeField] Task _next = null;
 
         System.Action _onStart;
         System.Action<float> _onUpdate;
@@ -37,25 +39,38 @@ namespace Momentum
         public float CurrentLoop { get { return _currentLoops; } }
         public float TotalLoops { get { return _loops; } }
 
-        public Tween Time(float time = 1f)
+        public static Task Add()
+        {
+            Task task = new Task();
+            Core.Juggler.Add(task);
+            return task;
+        }
+
+        public Task Name(string name)
+        {
+            _name = name;
+            return this;
+        }
+
+        public Task Time(float time = 1f)
         {
             _time = time;
             return this;
         }
 
-        public Tween Random(float randomTime = 0f)
+        public Task Random(float randomTime = 0f)
         {
             _random = randomTime;
             return this;
         }
 
-        public Tween Delay(float delay = 0f)
+        public Task Delay(float delay = 0f)
         {
             _delay = delay;
             return this;
         }
 
-        public Tween Loop(int loops = 0)
+        public Task Loop(int loops = 0)
         {
             if (loops == -1)
             {
@@ -68,31 +83,31 @@ namespace Momentum
             return this;
         }
 
-        public Tween Next(Tween tween)
+        public Task Next(Task task)
         {
-            _next = tween;
+            _next = task;
             return this;
         }
 
-        public Tween OnStart(System.Action callback)
+        public Task OnStart(System.Action callback)
         {
             _onStart = callback;
             return this;
         }
 
-        public Tween OnUpdate(System.Action<float> callback)
+        public Task OnUpdate(System.Action<float> callback)
         {
             _onUpdate = callback;
             return this;
         }
 
-        public Tween OnComplete(System.Action callback)
+        public Task OnComplete(System.Action callback)
         {
             _onComplete = callback;
             return this;
         }
 
-        public Tween OnRepeat(System.Action<int> callback)
+        public Task OnRepeat(System.Action<int> callback)
         {
             _onRepeat = callback;
             return this;
@@ -145,10 +160,11 @@ namespace Momentum
 
         public void Reset()
         {
+            _isActive = true;
             _currentTime = 0f;
+            _currentRandom = 0f;
             _currentDelay = 0f;
             _currentLoops = 0;
-            _isActive = true;
         }
     }
 }

@@ -1,39 +1,41 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Momentum
 {
     [System.Serializable]
     public class Juggler
     {
-        public List<Tween> _tweens = new List<Tween>();
+        [SerializeField] List<Task> _tasks = new List<Task>();
 
-        public void Add(Tween animatable)
+        public void Add(Task task)
         {
-            _tweens.Add(animatable);
+            _tasks.Add(task);
         }
 
-        public void Remove(Tween animatable)
-        {
-            _tweens.Remove(animatable);
+        public void Remove(Task task)
+        {            
+            _tasks.Remove(task);
         }
 
         public void Update(float deltaTime)
         {
-            for (int i = _tweens.Count - 1; i >= 0; i--)
+            for (int i = _tasks.Count - 1; i >= 0; i--)
             {
-                Tween tween = _tweens[i];
-                tween.Update(deltaTime);
+                Task task = _tasks[i];
+                task.Update(deltaTime);
 
-                if (!tween.IsActive)
+                if (!task.IsActive)
                 {
-                    Remove(tween);
+                    task.Reset();
+                    Remove(task);
                 }
             }
         }
 
         public void Purge()
         {
-            _tweens.Clear();
+            _tasks.Clear();
         }
     }
 }

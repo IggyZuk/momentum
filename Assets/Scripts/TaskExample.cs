@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using Momentum;
 
-public class TweenExample : MonoBehaviour
+public class TaskExample : MonoBehaviour
 {
     Vector2 pos = new Vector2();
     Vector2 dir = Vector2.right;
@@ -9,13 +9,9 @@ public class TweenExample : MonoBehaviour
 
     bool isSolid = false;
 
-    [SerializeField] Juggler jugglerDebug;
-
     void Awake()
     {
-        jugglerDebug = Core.Juggler;
-
-        Tween tween = new Tween()
+        Task task = new Task()
             .Delay(1f)
             .Time(1f)
             .Loop(3)
@@ -36,12 +32,12 @@ public class TweenExample : MonoBehaviour
                 if (l == 3) dir = Vector2.down;
             });
 
-        tween.OnComplete(() =>
+        task.OnComplete(() =>
         {
             Debug.Log("Restart");
-            tween.Reset();
+            task.Reset();
 
-            Core.Juggler.Add(new Tween().Time(3f).OnComplete(() =>
+            Core.Juggler.Add(new Task().Time(3f).OnComplete(() =>
             {
                 color = new Color(Random.value, Random.value, Random.value);
                 Debug.Log("Boom!");
@@ -49,33 +45,28 @@ public class TweenExample : MonoBehaviour
         });
 
         Core.Juggler.Add(
-            new Tween().Time(1f).OnStart(() => color = Color.red).Next(
-            new Tween().Time(1f).OnStart(() => color = Color.green).Next(
-            new Tween().Time(1f).OnStart(() => color = Color.yellow).Next(
-            new Tween().Time(1f).OnStart(() => color = Color.magenta).OnComplete(() => color = Color.cyan)
-                .Next(new Tween().Time(1f).OnComplete(() =>
+            new Task().Time(1f).OnStart(() => color = Color.red).Next(
+            new Task().Time(1f).OnStart(() => color = Color.green).Next(
+            new Task().Time(1f).OnStart(() => color = Color.yellow).Next(
+            new Task().Time(1f).OnStart(() => color = Color.magenta).OnComplete(() => color = Color.cyan)
+                .Next(new Task().Time(1f).OnComplete(() =>
                 {
-                    Core.Juggler.Add(new Tween()
+                    Core.Juggler.Add(new Task()
                         .Time(0.5f)
                         .Random(0.5f)
                         .OnRepeat(l => isSolid = !isSolid)
                         .Loop(-1));
 
-                    Core.Juggler.Add(tween);
+                    Core.Juggler.Add(task);
                 }))
         ))));
 
-        Core.Juggler.Add(new Tween()
+        Core.Juggler.Add(new Task()
             .OnUpdate(_ =>
             {
                 Time.timeScale = Input.GetMouseButton(0) ? 4f : 1f;
             })
             .Time(1000f));
-    }
-
-    void Update()
-    {
-        Core.Juggler.Update(Time.deltaTime);
     }
 
     void OnDrawGizmos()
