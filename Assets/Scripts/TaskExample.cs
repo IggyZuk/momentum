@@ -26,10 +26,10 @@ public class TaskExample : MonoBehaviour
             })
             .OnRepeat(_ =>
             {
-                Debug.Log("Repeat: " + _.currentLoop);
-                if (_.currentLoop == 1) dir = Vector2.up;
-                if (_.currentLoop == 2) dir = Vector2.left;
-                if (_.currentLoop == 3) dir = Vector2.down;
+                Debug.Log("Repeat: " + _.CurrentLoop);
+                if (_.CurrentLoop == 1) dir = Vector2.up;
+                if (_.CurrentLoop == 2) dir = Vector2.left;
+                if (_.CurrentLoop == 3) dir = Vector2.down;
             });
 
         task.OnComplete(_ =>

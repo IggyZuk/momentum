@@ -3,7 +3,7 @@ using UnityEngine;
 
 public static class Ease
 {
-    private const float _HALF_PI = Mathf.PI / 2;
+    private const float HALF_PI = Mathf.PI / 2;
 
     public static float Linear(float ratio)
     {
@@ -137,12 +137,12 @@ public static class Ease
 
     public static float InSine(float ratio)
     {
-        return -Mathf.Cos(ratio * _HALF_PI) + 1f;
+        return -Mathf.Cos(ratio * HALF_PI) + 1f;
     }
 
     public static float OutSine(float ratio)
     {
-        return Mathf.Sin(ratio * _HALF_PI);
+        return Mathf.Sin(ratio * HALF_PI);
     }
 
     public static float InOutSine(float ratio)

@@ -5,40 +5,21 @@ namespace Momentum
     [System.Serializable]
     public class Task
     {
-        [SerializeField] bool _isActive = true;
+        [SerializeField] string name = string.Empty;
 
-        [SerializeField] string _name = string.Empty;
+        [SerializeField] TaskData data;
 
-        [SerializeField] float _time = 0f;
-        [SerializeField] float _currentTime = 0f;
+        System.Action<TaskData> onStart;
+        System.Action<TaskData> onUpdate;
+        System.Action<TaskData> onRepeat;
+        System.Action<TaskData> onComplete;
 
-        [SerializeField] float _random = 0f;
-        [SerializeField] float _currentRandom = 0f;
+        public bool IsActive { get { return data.IsActive; } }
 
-        [SerializeField] float _delay = 0f;
-        [SerializeField] float _currentDelay = 0f;
-
-        [SerializeField] int _loops = 0;
-        [SerializeField] int _currentLoops = 0;
-
-        [SerializeField] Task _next = null;
-
-        System.Action<Task> _onStart;
-        System.Action<Task> _onUpdate;
-        System.Action<Task> _onRepeat;
-        System.Action<Task> _onComplete;
-
-        public bool isActive { get { return _isActive; } }
-
-        public float currentTime { get { return _currentTime; } }
-        public float time { get { return _time + _currentRandom; } }
-        public float progress { get { return _currentTime / Mathf.Clamp(Mathf.Epsilon, time, time); } }
-
-        public float currentDelay { get { return _currentDelay; } }
-        public float delay { get { return _delay; } }
-
-        public float currentLoop { get { return _currentLoops; } }
-        public float loops { get { return _loops; } }
+        public Task()
+        {
+            data = new TaskData(this);
+        }
 
         public static Task Add()
         {
@@ -47,27 +28,32 @@ namespace Momentum
             return task;
         }
 
+        public static void Remove(Task task)
+        {
+            Core.Juggler.Remove(task);
+        }
+
         public Task Name(string name)
         {
-            _name = name;
+            this.name = name;
             return this;
         }
 
         public Task Time(float time = 1f)
         {
-            _time = time;
+            data.Time = time;
             return this;
         }
 
         public Task Random(float randomTime = 0f)
         {
-            _random = randomTime;
+            data.Random = randomTime;
             return this;
         }
 
         public Task Delay(float delay = 0f)
         {
-            _delay = delay;
+            data.Delay = delay;
             return this;
         }
 
@@ -75,86 +61,93 @@ namespace Momentum
         {
             if (loops == -1)
             {
-                _loops = int.MaxValue;
+                data.Loops = int.MaxValue;
             }
             else
             {
-                _loops = loops;
+                data.Loops = loops;
             }
             return this;
         }
 
-        // TODO: have multiple children; go one by one though them
         public Task Next(Task task)
         {
-            _next = task;
+            data.Next = task;
+            return task;
+        }
+
+        public Task Dispose(TaskDisposables container)
+        {
+            container.Add(this);
             return this;
         }
 
-        public Task OnStart(System.Action<Task> callback)
+        public Task OnStart(System.Action<TaskData> callback)
         {
-            _onStart = callback;
+            onStart = callback;
             return this;
         }
 
-        public Task OnUpdate(System.Action<Task> callback)
+        public Task OnUpdate(System.Action<TaskData> callback)
         {
-            _onUpdate = callback;
+            onUpdate = callback;
             return this;
         }
 
-        public Task OnComplete(System.Action<Task> callback)
+        public Task OnComplete(System.Action<TaskData> callback)
         {
-            _onComplete = callback;
+            onComplete = callback;
             return this;
         }
 
-        public Task OnRepeat(System.Action<Task> callback)
+        public Task OnRepeat(System.Action<TaskData> callback)
         {
-            _onRepeat = callback;
+            onRepeat = callback;
             return this;
         }
 
         public void Update(float deltaTime)
         {
-            if (_currentDelay < _delay)
+            if (data.CurrentDelay < data.Delay)
             {
-                _currentDelay += deltaTime;
+                data.CurrentDelay += deltaTime;
                 return;
             }
 
-            if (_currentTime <= 0f && (_loops == 0 || _currentLoops == 0))
+            if (data.CurrentTime <= 0f && (data.Loops == 0 || data.CurrentLoop == 0))
             {
-                _currentRandom = UnityEngine.Random.Range(-_random, _random);
+                data.CurrentRandom = UnityEngine.Random.Range(-data.Random, data.Random);
 
-                if (_onStart != null) _onStart(this);
+                if (onStart != null) onStart(data);
             }
 
-            _currentTime += deltaTime;
+            data.CurrentTime += deltaTime;
 
-            if (_onUpdate != null) _onUpdate(this);
+            if (onUpdate != null) onUpdate(data);
 
-            if (_currentTime >= time)
+            while (data.CurrentTime >= data.Time)
             {
-                if (_currentLoops == _loops)
+                if (data.CurrentLoop == data.Loops)
                 {
-                    _isActive = false;
+                    data.IsActive = false;
 
-                    if (_onComplete != null) _onComplete(this);
+                    if (onComplete != null) onComplete(data);
 
-                    if (_next != null) Core.Juggler.Add(_next);
+                    if (data.Next != null) Core.Juggler.Add(data.Next);
+
+                    break;
                 }
-                else if (_currentLoops < _loops)
+                else if (data.CurrentLoop < data.Loops)
                 {
-                    _currentLoops++;
+                    data.CurrentLoop++;
 
-                    _currentTime -= _currentTime + deltaTime;
+                    data.CurrentTime -= data.Time + deltaTime;
 
-                    _currentRandom = UnityEngine.Random.Range(-_random, _random);
+                    data.CurrentRandom = UnityEngine.Random.Range(-data.Random, data.Random);
 
-                    if (_currentLoops <= _loops)
+                    if (data.CurrentLoop <= data.Loops)
                     {
-                        if (_onRepeat != null) _onRepeat(this);
+                        if (onRepeat != null) onRepeat(data);
                     }
                 }
             }
@@ -162,11 +155,11 @@ namespace Momentum
 
         public void Reset()
         {
-            _isActive = true;
-            _currentTime = 0f;
-            _currentRandom = 0f;
-            _currentDelay = 0f;
-            _currentLoops = 0;
+            data.IsActive = true;
+            data.CurrentTime = 0f;
+            data.CurrentRandom = 0f;
+            data.CurrentDelay = 0f;
+            data.CurrentLoop = 0;
         }
     }
 }

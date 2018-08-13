@@ -6,26 +6,26 @@ namespace Momentum
     [System.Serializable]
     public class Juggler
     {
-        [SerializeField] List<Task> _tasks = new List<Task>();
+        [SerializeField] List<Task> tasks = new List<Task>();
 
         public void Add(Task task)
         {
-            _tasks.Add(task);
+            tasks.Add(task);
         }
 
         public void Remove(Task task)
-        {            
-            _tasks.Remove(task);
+        {
+            tasks.Remove(task);
         }
 
         public void Update(float deltaTime)
         {
-            for (int i = _tasks.Count - 1; i >= 0; i--)
+            for (int i = tasks.Count - 1; i >= 0; i--)
             {
-                Task task = _tasks[i];
+                Task task = tasks[i];
                 task.Update(deltaTime);
 
-                if (!task.isActive)
+                if (!task.IsActive)
                 {
                     task.Reset();
                     Remove(task);
@@ -35,7 +35,7 @@ namespace Momentum
 
         public void Purge()
         {
-            _tasks.Clear();
+            tasks.Clear();
         }
     }
 }

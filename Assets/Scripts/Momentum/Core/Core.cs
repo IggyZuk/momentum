@@ -2,8 +2,8 @@
 {
     public static class Core
     {
-        static Juggler _juggler = new Juggler();
+        static Juggler juggler = new Juggler();
 
-        public static Juggler Juggler { get { return _juggler; } }
+        public static Juggler Juggler { get { return juggler; } }
     }
 }

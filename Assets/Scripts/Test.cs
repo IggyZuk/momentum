@@ -8,13 +8,34 @@ public class Test : MonoBehaviour
 
     void Awake()
     {
+        //TestNext();
         //TestMoveDelay();
         //TestSwitchPositionsFromList();
         //TestMoveSquare();
         TestTurbo();
-        //TestCircle();
+        TestCircle();
         //TestAttack();
-        TestMoveAndScale();
+        //TestMoveAndScale();
+    }
+
+    void TestNext()
+    {
+        Task.Add().Name("Loop").Loop(-1).OnRepeat(_ =>
+        {
+            Task t1 = new Task().Name("1").Time(2f).Loop(4).OnRepeat(data => Debug.Log("1: " + data.CurrentLoop));
+            Task t2 = new Task().Name("2").Time(1f).Loop(8).OnRepeat(data => Debug.Log("2: " + data.CurrentLoop));
+            Task t3 = new Task().Name("3").Time(0.5f).Loop(16).OnRepeat(data => Debug.Log("3: " + data.CurrentLoop));
+
+            if (Input.GetKeyDown(KeyCode.X))
+            {
+                Task.Add()
+                    .Name("Starting...")
+                    .Time(3f)
+                    .Next(t1)
+                    .Next(t2)
+                    .Next(t3);
+            }
+        });
     }
 
     void TestMoveAndScale()
@@ -28,30 +49,30 @@ public class Test : MonoBehaviour
             .Time(0.5f)
             .Loop(3)
             .Random(0f)
-            .OnUpdate(task =>
+            .OnUpdate(data =>
             {
                 Vector3 p = Vector3.LerpUnclamped(
                     positiveDirection ? pos1 : pos2,
                     positiveDirection ? pos2 : pos1,
-                    Ease.OutBack(task.progress)
+                    Ease.OutBack(data.Progress)
                 );
                 this.transform.position = p;
 
                 Color c = Color.LerpUnclamped(
                     prevColor,
                     nextColor,
-                    Ease.OutBack(task.progress)
+                    Ease.OutBack(data.Progress)
                 );
                 this.GetComponent<MeshRenderer>().material.color = c;
             })
-            .OnRepeat(task =>
+            .OnRepeat(data =>
             {
                 prevColor = nextColor;
                 nextColor = new Color(Random.value, Random.value, Random.value);
                 positiveDirection = !positiveDirection;
 
             })
-            .OnComplete(task =>
+            .OnComplete(data =>
             {
                 Task.Add()
                     .Name("Wait/Scale")
@@ -71,7 +92,7 @@ public class Test : MonoBehaviour
                                var s = Vector3.LerpUnclamped(
                                    oldScale,
                                    newScale,
-                                   Ease.InOutBack(__.progress)
+                                   Ease.InOutBack(__.Progress)
                                );
                                this.transform.localScale = s;
                            });
@@ -79,7 +100,7 @@ public class Test : MonoBehaviour
                         Task.Add()
                            .Name("Wait/Loop")
                            .Time(1f)
-                           .OnComplete(__ => Core.Juggler.Add(task));
+                           .OnComplete(__ => Core.Juggler.Add(data.Task));
                     });
             });
     }
@@ -109,10 +130,11 @@ public class Test : MonoBehaviour
     {
         Task.Add()
             .Name("Circle Movement")
+            .Time(1f)
             .Loop(-1)
-            .OnRepeat(task =>
+            .OnUpdate(data =>
             {
-                this.transform.position = new Vector3(Mathf.Cos(task.currentLoop * 0.25f), Mathf.Sin(task.currentLoop * 0.25f), 0f);
+                this.transform.position = new Vector3(Mathf.Cos(data.Progress * Mathf.PI * 2f), Mathf.Sin(data.Progress * Mathf.PI * 2f), 0f);
             });
     }
 
@@ -121,7 +143,7 @@ public class Test : MonoBehaviour
         Task.Add()
             .Name("Turbo")
             .Loop(-1)
-            .OnRepeat(i =>
+            .OnUpdate(_ =>
             {
                 Time.timeScale = Input.GetMouseButton(0) ? 4f : 1f;
             });
@@ -192,9 +214,7 @@ public class Test : MonoBehaviour
 
         int posIndex = 0;
 
-        var task = Task.Add();
-
-        task
+        Task task = Task.Add()
             .Delay(1f)
             .Time(0.25f)
             .Loop(-1)
