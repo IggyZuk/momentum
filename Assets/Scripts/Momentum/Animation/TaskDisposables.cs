@@ -15,7 +15,7 @@ namespace Momentum
         {
             foreach (var task in tasks)
             {
-                Task.Remove(task);
+                task.Stop();
             }
             tasks.Clear();
         }

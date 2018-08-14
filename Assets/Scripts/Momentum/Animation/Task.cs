@@ -21,16 +21,16 @@ namespace Momentum
             data = new TaskData(this);
         }
 
-        public static Task Add()
+        public static Task Run()
         {
             Task task = new Task();
             Core.Juggler.Add(task);
             return task;
         }
 
-        public static void Remove(Task task)
+        public void Stop()
         {
-            Core.Juggler.Remove(task);
+            Core.Juggler.Remove(this);
         }
 
         public Task Name(string name)
@@ -57,7 +57,7 @@ namespace Momentum
             return this;
         }
 
-        public Task Loop(int loops = 0)
+        public Task Loop(int loops = -1)
         {
             if (loops == -1)
             {

@@ -8,19 +8,56 @@ public class Test : MonoBehaviour
 
     void Awake()
     {
+        //TestStop();
+        TestDispose();
         //TestNext();
         //TestMoveDelay();
         //TestSwitchPositionsFromList();
         //TestMoveSquare();
         TestTurbo();
-        TestCircle();
+        //TestCircle();
         //TestAttack();
         //TestMoveAndScale();
     }
 
+    void TestStop()
+    {
+        Task.Run()
+            .Name("Stop[main]")
+            .Time(1f)
+            .Loop()
+            .OnRepeat(data =>
+            {
+                Debug.Log(10 - data.CurrentLoop);
+                if (data.CurrentLoop == 10) data.Task.Stop();
+            });
+    }
+
+    void TestDispose()
+    {
+        TaskDisposables disposables = new TaskDisposables();
+
+        Task.Run()
+            .Name("Disposable[main]")
+            .Time(1f)
+            .Loop()
+            .Dispose(disposables)
+            .OnRepeat(data =>
+            {
+                Debug.Log(10 - data.CurrentLoop);
+                if (data.CurrentLoop == 10) disposables.Dispose();
+            });
+
+        Task.Run().Name("Disposable[1]").Loop().Dispose(disposables);
+        Task.Run().Name("Disposable[2]").Loop().Dispose(disposables);
+        Task.Run().Name("Disposable[3]").Loop().Dispose(disposables);
+        Task.Run().Name("Disposable[4]").Loop().Dispose(disposables);
+        Task.Run().Name("Disposable[5]").Loop().Dispose(disposables);
+    }
+
     void TestNext()
     {
-        Task.Add().Name("Loop").Loop(-1).OnRepeat(_ =>
+        Task.Run().Name("Loop").Loop().OnRepeat(_ =>
         {
             Task t1 = new Task().Name("1").Time(2f).Loop(4).OnRepeat(data => Debug.Log("1: " + data.CurrentLoop));
             Task t2 = new Task().Name("2").Time(1f).Loop(8).OnRepeat(data => Debug.Log("2: " + data.CurrentLoop));
@@ -28,7 +65,7 @@ public class Test : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.X))
             {
-                Task.Add()
+                Task.Run()
                     .Name("Starting...")
                     .Time(3f)
                     .Next(t1)
@@ -44,7 +81,7 @@ public class Test : MonoBehaviour
         Color prevColor = Color.white;
         Color nextColor = Color.red;
 
-        Task.Add()
+        Task.Run()
             .Name("L/R")
             .Time(0.5f)
             .Loop(3)
@@ -74,7 +111,7 @@ public class Test : MonoBehaviour
             })
             .OnComplete(data =>
             {
-                Task.Add()
+                Task.Run()
                     .Name("Wait/Scale")
                     .Time(1)
                     .Random(0.7f)
@@ -84,7 +121,7 @@ public class Test : MonoBehaviour
                         var oldScale = this.transform.localScale;
                         var newScale = this.transform.localScale * 1.1f;
 
-                        Task.Add()
+                        Task.Run()
                            .Name("Smooth Scale")
                            .Time(0.5f)
                            .OnUpdate(__ =>
@@ -97,7 +134,7 @@ public class Test : MonoBehaviour
                                this.transform.localScale = s;
                            });
 
-                        Task.Add()
+                        Task.Run()
                            .Name("Wait/Loop")
                            .Time(1f)
                            .OnComplete(__ => Core.Juggler.Add(data.Task));
@@ -114,7 +151,7 @@ public class Test : MonoBehaviour
             new Task().Name("Attack").Time(0.5f).Next(
             new Task().Name("Cooldown").Time(2f).OnComplete(_ => isAttacking = false)));
 
-        Task.Add().Loop(-1).OnRepeat(_ =>
+        Task.Run().Loop().OnRepeat(_ =>
         {
             if (Input.GetMouseButton(0))
             {
@@ -128,22 +165,22 @@ public class Test : MonoBehaviour
 
     void TestCircle()
     {
-        Task.Add()
+        Task.Run()
             .Name("Circle Movement")
             .Time(1f)
-            .Loop(-1)
-            .OnUpdate(data =>
+            .Loop()
+            .OnRepeat(data =>
             {
-                this.transform.position = new Vector3(Mathf.Cos(data.Progress * Mathf.PI * 2f), Mathf.Sin(data.Progress * Mathf.PI * 2f), 0f);
+                this.transform.position = new Vector3(Mathf.Cos(data.CurrentLoop * 0.5f), Mathf.Sin(data.CurrentLoop * 0.5f), 0f);
             });
     }
 
     void TestTurbo()
     {
-        Task.Add()
+        Task.Run()
             .Name("Turbo")
-            .Loop(-1)
-            .OnUpdate(_ =>
+            .Loop()
+            .OnRepeat(_ =>
             {
                 Time.timeScale = Input.GetMouseButton(0) ? 4f : 1f;
             });
@@ -189,8 +226,8 @@ public class Test : MonoBehaviour
 
     void TestMoveDelay()
     {
-        Task.Add()
-        .Loop(-1)
+        Task.Run()
+        .Loop()
         .OnUpdate(t =>
         {
             if (Input.GetMouseButton(0))
@@ -198,7 +235,7 @@ public class Test : MonoBehaviour
                 Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 pos.z = 0f;
 
-                Task.Add()
+                Task.Run()
                     .Time(1f)
                     .OnComplete(_ => this.transform.position = pos);
             }
@@ -214,10 +251,10 @@ public class Test : MonoBehaviour
 
         int posIndex = 0;
 
-        Task task = Task.Add()
+        Task task = Task.Run()
             .Delay(1f)
             .Time(0.25f)
-            .Loop(-1)
+            .Loop()
             .OnRepeat(_ =>
             {
                 posIndex++;
