@@ -13,7 +13,7 @@ namespace Momentum
         System.Action<TaskData> onRepeat;
         System.Action<TaskData> onComplete;
 
-        const float FixedDelta = 0.02f;
+        const float FixedDeltaTime = 0.02f;
 
         public bool IsActive { get { return data.IsActive; } }
 
@@ -147,7 +147,7 @@ namespace Momentum
                 {
                     data.CurrentLoop++;
 
-                    data.CurrentTime -= Mathf.Clamp(data.Time, FixedDelta, data.Time);
+                    data.CurrentTime -= Mathf.Clamp(data.Time, FixedDeltaTime, data.Time);
 
                     data.CurrentRandom = UnityEngine.Random.Range(-data.Random, data.Random);
 
