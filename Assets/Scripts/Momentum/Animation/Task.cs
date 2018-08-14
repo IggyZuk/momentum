@@ -6,13 +6,14 @@ namespace Momentum
     public class Task
     {
         [SerializeField] string name = string.Empty;
-
         [SerializeField] TaskData data;
 
         System.Action<TaskData> onStart;
         System.Action<TaskData> onUpdate;
         System.Action<TaskData> onRepeat;
         System.Action<TaskData> onComplete;
+
+        const float FixedDelta = 0.02f;
 
         public bool IsActive { get { return data.IsActive; } }
 
@@ -24,8 +25,13 @@ namespace Momentum
         public static Task Run()
         {
             Task task = new Task();
-            Core.Juggler.Add(task);
+            task.Start();
             return task;
+        }
+
+        public void Start()
+        {
+            Core.Juggler.Add(this);
         }
 
         public void Stop()
@@ -133,7 +139,7 @@ namespace Momentum
 
                     if (onComplete != null) onComplete(data);
 
-                    if (data.Next != null) Core.Juggler.Add(data.Next);
+                    if (data.Next != null) data.Next.Start();
 
                     break;
                 }
@@ -141,7 +147,7 @@ namespace Momentum
                 {
                     data.CurrentLoop++;
 
-                    data.CurrentTime -= data.Time + deltaTime;
+                    data.CurrentTime -= Mathf.Clamp(data.Time, FixedDelta, data.Time);
 
                     data.CurrentRandom = UnityEngine.Random.Range(-data.Random, data.Random);
 

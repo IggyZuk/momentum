@@ -206,7 +206,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 109350569}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8057ffc0fca99443a8211c2bd492dfd4, type: 3}
+  m_Script: {fileID: 11500000, guid: 52e6eb66aeff26d4499ecc5829ede5ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   pos1: {x: 0, y: 0, z: -5}
@@ -383,7 +383,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   juggler:
-    _tasks: []
+    tasks: []
 --- !u!4 &2013767517
 Transform:
   m_ObjectHideFlags: 0
