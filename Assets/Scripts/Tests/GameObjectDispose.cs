@@ -1,26 +1,18 @@
-﻿using UnityEngine;
-using Momentum;
+﻿using Momentum;
+using UnityEngine;
 
-public class GameObjectDispose : MonoBehaviour
+public class GameObjectDispose : MonoTaskable
 {
-    TaskDisposables disposables = new TaskDisposables();
-
     void Awake()
     {
-        Task.Run()
+        Task.Run(this)
             .Name("GameObjectDispose")
             .Time(1f)
             .Loop()
-            .Dispose(disposables)
             .OnRepeat(data =>
             {
                 Debug.Log(10 - data.CurrentLoop);
-                if (data.CurrentLoop == 10) Component.Destroy(this);
+                if (data.CurrentLoop == 10) Destroy(this);
             });
-    }
-
-    void OnDestroy()
-    {
-        disposables.Dispose();
     }
 }

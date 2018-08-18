@@ -17,6 +17,11 @@ namespace Momentum
 
         public bool IsActive { get { return data.IsActive; } }
 
+        public Task(ITaskable taskable) : this()
+        {
+            AddTo(taskable);
+        }
+
         public Task()
         {
             data = new TaskData(this);
@@ -24,18 +29,27 @@ namespace Momentum
 
         public static Task Run()
         {
-            Task task = new Task();
-            task.Start();
-            return task;
+            return new Task().Start();
         }
 
-        public void Start()
+        public static Task Run(ITaskable taskable)
         {
+            return new Task(taskable).Start();
+        }
+
+        public Task Start()
+        {
+            data.IsActive = true;
+
             Core.Juggler.Add(this);
+
+            return this;
         }
 
         public void Stop()
         {
+            data.IsActive = false;
+
             Core.Juggler.Remove(this);
         }
 
@@ -57,23 +71,20 @@ namespace Momentum
             return this;
         }
 
-        public Task Delay(float delay = 0f)
+        public Task Loop(int loops = -1)
         {
-            data.Delay = delay;
+            data.Loops = loops;
             return this;
         }
 
-        public Task Loop(int loops = -1)
+        public Task Next(ITaskable taskable)
         {
-            if (loops == -1)
-            {
-                data.Loops = int.MaxValue;
-            }
-            else
-            {
-                data.Loops = loops;
-            }
-            return this;
+            return Next(new Task(taskable));
+        }
+
+        public Task Next()
+        {
+            return Next(new Task());
         }
 
         public Task Next(Task task)
@@ -82,9 +93,9 @@ namespace Momentum
             return task;
         }
 
-        public Task Dispose(TaskDisposables container)
+        public Task AddTo(ITaskable taskable)
         {
-            container.Add(this);
+            taskable.AddTask(this);
             return this;
         }
 
@@ -100,72 +111,85 @@ namespace Momentum
             return this;
         }
 
-        public Task OnComplete(System.Action<TaskData> callback)
-        {
-            onComplete = callback;
-            return this;
-        }
-
         public Task OnRepeat(System.Action<TaskData> callback)
         {
             onRepeat = callback;
             return this;
         }
 
+        public Task OnComplete(System.Action<TaskData> callback)
+        {
+            onComplete = callback;
+            return this;
+        }
+
+        public void Reset()
+        {
+            data.IsActive = false;
+            data.CurrentTime = 0f;
+            data.CurrentRandom = 0f;
+            data.CurrentLoop = 0;
+        }
+
         public void Update(float deltaTime)
         {
-            if (data.CurrentDelay < data.Delay)
-            {
-                data.CurrentDelay += deltaTime;
-                return;
-            }
+            TryStart();
+            Advance(deltaTime);
+            TryRepeat();
+        }
 
+        void TryStart()
+        {
             if (data.CurrentTime <= 0f && (data.Loops == 0 || data.CurrentLoop == 0))
             {
                 data.CurrentRandom = UnityEngine.Random.Range(-data.Random, data.Random);
 
                 if (onStart != null) onStart(data);
             }
+        }
 
+        void Advance(float deltaTime)
+        {
             data.CurrentTime += deltaTime;
-
             if (onUpdate != null) onUpdate(data);
+        }
 
+        void TryRepeat()
+        {
             while (data.CurrentTime >= data.Time)
             {
-                if (data.CurrentLoop == data.Loops)
+                if (data.Loops == -1 || data.CurrentLoop < data.Loops)
                 {
-                    data.IsActive = false;
-
-                    if (onComplete != null) onComplete(data);
-
-                    if (data.Next != null) data.Next.Start();
-
-                    break;
+                    Repeat();
                 }
-                else if (data.CurrentLoop < data.Loops)
+                else if (data.CurrentLoop == data.Loops)
                 {
-                    data.CurrentLoop++;
-
-                    data.CurrentTime -= Mathf.Clamp(data.Time, FixedDeltaTime, data.Time);
-
-                    data.CurrentRandom = UnityEngine.Random.Range(-data.Random, data.Random);
-
-                    if (data.CurrentLoop <= data.Loops)
-                    {
-                        if (onRepeat != null) onRepeat(data);
-                    }
+                    Complete();
+                    break;
                 }
             }
         }
 
-        public void Reset()
+        void Repeat()
         {
-            data.IsActive = true;
-            data.CurrentTime = 0f;
-            data.CurrentRandom = 0f;
-            data.CurrentDelay = 0f;
-            data.CurrentLoop = 0;
+            data.CurrentLoop++;
+
+            data.CurrentTime -= Mathf.Clamp(data.Time, FixedDeltaTime, data.Time);
+
+            data.CurrentRandom = UnityEngine.Random.Range(-data.Random, data.Random);
+
+            if (data.Loops == -1 || data.CurrentLoop <= data.Loops)
+            {
+                if (onRepeat != null) onRepeat(data);
+            }
+        }
+
+        void Complete()
+        {
+            data.IsActive = false;
+
+            if (onComplete != null) onComplete(data);
+            if (data.Next != null) data.Next.Start();
         }
     }
 }

@@ -12,7 +12,8 @@ public class TaskExample : MonoBehaviour
     void Awake()
     {
         Task task = new Task()
-            .Delay(1f)
+            .Time(1f)
+            .Next()
             .Time(1f)
             .Loop(3)
             .OnStart(_ =>

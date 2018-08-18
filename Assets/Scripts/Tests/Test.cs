@@ -1,7 +1,7 @@
-﻿using UnityEngine;
-using Momentum;
+﻿using Momentum;
+using UnityEngine;
 
-public class Test : MonoBehaviour
+public class Test : MonoTaskable
 {
     [SerializeField] Vector3 pos1;
     [SerializeField] Vector3 pos2;
@@ -10,16 +10,16 @@ public class Test : MonoBehaviour
     {
         //TestGameObjectDestroy();
         //TestStop();
-        //TestDispose();
+        //TestTaskable();
         //TestNext();
         //TestMoveDelay();
         //TestSwitchPositionsFromList();
         //TestMoveSquare();
-        TestTurbo();
-        TestCircleUpdate();
+        //TestCircleUpdate();
         //TestCircleLoop();
         //TestAttack();
-        //TestMoveAndScale();
+        TestMoveAndScale();
+        TestTurbo();
     }
 
     void TestGameObjectDestroy()
@@ -40,26 +40,26 @@ public class Test : MonoBehaviour
             });
     }
 
-    void TestDispose()
+    void TestTaskable()
     {
-        TaskDisposables disposables = new TaskDisposables();
+        Taskable taskable = new Taskable();
 
         Task.Run()
             .Name("Disposable[main]")
             .Time(1f)
             .Loop()
-            .Dispose(disposables)
+            .AddTo(taskable)
             .OnRepeat(data =>
             {
                 Debug.Log(10 - data.CurrentLoop);
-                if (data.CurrentLoop == 10) disposables.Dispose();
+                if (data.CurrentLoop == 10) taskable.StopAllTasks();
             });
 
-        Task.Run().Name("Disposable[1]").Loop().Dispose(disposables);
-        Task.Run().Name("Disposable[2]").Loop().Dispose(disposables);
-        Task.Run().Name("Disposable[3]").Loop().Dispose(disposables);
-        Task.Run().Name("Disposable[4]").Loop().Dispose(disposables);
-        Task.Run().Name("Disposable[5]").Loop().Dispose(disposables);
+        Task.Run().Name("Disposable[1]").Loop().AddTo(taskable);
+        Task.Run().Name("Disposable[2]").Loop().AddTo(taskable);
+        Task.Run().Name("Disposable[3]").Loop().AddTo(taskable);
+        Task.Run().Name("Disposable[4]").Loop().AddTo(taskable);
+        Task.Run().Name("Disposable[5]").Loop().AddTo(taskable);
     }
 
     void TestNext()
@@ -80,6 +80,163 @@ public class Test : MonoBehaviour
                     .Next(t3);
             }
         });
+    }
+
+    void TestAttack()
+    {
+        bool isAttacking = false;
+
+        Task attackTask = new Task(this);
+
+        attackTask
+            .Name("Prepare")
+            .Time(1f)
+            .OnStart(_ => isAttacking = true)
+            .Next(this)
+            .Name("Attack")
+            .Time(0.5f)
+            .Next(this)
+            .Name("Cooldown")
+            .Time(2f)
+            .OnComplete(_ => isAttacking = false);
+
+        Task.Run(this)
+            .Name("TestAttack")
+            .Loop()
+            .OnUpdate(_ =>
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (!isAttacking)
+                    {
+                        attackTask.Start();
+                    }
+                }
+            });
+    }
+
+    void TestCircleUpdate()
+    {
+        Task.Run()
+            .Name("Circle Movement [update]")
+            .Time(1f)
+            .Loop()
+            .OnUpdate(data =>
+            {
+                this.transform.position = new Vector3(
+                    Mathf.Cos(data.Progress * Mathf.PI * 2f),
+                    Mathf.Sin(data.Progress * Mathf.PI * 2f)
+                );
+            });
+    }
+
+    void TestCircleLoop()
+    {
+        Task.Run()
+            .Name("Circle Movement [loop]")
+            .Loop()
+            .OnRepeat(data =>
+            {
+                this.transform.position = new Vector3(
+                    Mathf.Cos((data.CurrentLoop * 0.125f) % 360),
+                    Mathf.Sin((data.CurrentLoop * 0.125f) % 360)
+                );
+            });
+    }
+
+    void TestMoveSquare()
+    {
+        var t1 = new Task();
+        var t2 = new Task();
+        var t3 = new Task();
+        var t4 = new Task();
+
+        t1
+            .Name("Up[delay]")
+            .Time(0.25f)
+            .Next()
+            .Name("Up")
+            .Time(1f)
+            .OnUpdate(_ => this.transform.position += Vector3.up * Time.deltaTime)
+            .Next(t2);
+
+        t2
+            .Name("Left[delay]")
+            .Time(0.25f)
+            .Next()
+            .Name("Left")
+            .Time(1f)
+            .OnUpdate(_ => this.transform.position += Vector3.left * Time.deltaTime)
+            .Next(t3);
+
+        t3
+            .Name("Down[delay]")
+            .Time(0.25f)
+            .Next()
+            .Name("Down")
+            .Time(1f)
+            .OnUpdate(_ => this.transform.position += Vector3.down * Time.deltaTime)
+            .Next(t4);
+
+        t4
+            .Name("Right[delay]")
+            .Time(0.25f)
+            .Next()
+            .Name("Right")
+            .Time(1f)
+            .OnUpdate(_ => this.transform.position += Vector3.right * Time.deltaTime)
+            .Next(t1);
+
+        t1.Start();
+    }
+
+    void TestMoveDelay()
+    {
+        Task.Run()
+            .Name("TestDelay[loop]")
+            .Loop()
+            .OnUpdate(t =>
+            {
+                if (Input.GetMouseButton(0))
+                {
+                    Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                    pos.z = 0f;
+
+                    Task.Run()
+                        .Name("TestDelay[movement]")
+                        .Time(1f)
+                        .OnComplete(_ =>
+                        {
+                            Debug.Log(pos);
+                            this.transform.position = pos;
+                        });
+                }
+            });
+    }
+
+    void TestSwitchPositionsFromList()
+    {
+        Vector3[] positions = new Vector3[3];
+        positions[0] = new Vector3(-1f, -1f, 0f);
+        positions[1] = new Vector3(0f, 0f, 0f);
+        positions[2] = new Vector3(1f, 1f, 0f);
+
+        int posIndex = 0;
+
+        Task task = Task.Run()
+            .Name("TestSwitchPositionsFromList[delay]")
+            .Time(1f)
+            .Next()
+            .Name("TestSwitchPositionsFromList[loop]")
+            .Time(0.25f)
+            .Loop()
+            .OnRepeat(_ =>
+            {
+                posIndex++;
+                posIndex %= positions.Length;
+
+                this.transform.position = positions[posIndex];
+            });
     }
 
     void TestMoveAndScale()
@@ -144,58 +301,8 @@ public class Test : MonoBehaviour
                         Task.Run()
                            .Name("Wait/Loop")
                            .Time(1f)
-                           .OnComplete(__ => Core.Juggler.Add(data.Task));
+                           .OnComplete(__ => data.Task.Start());
                     });
-            });
-    }
-
-    void TestAttack()
-    {
-        bool isAttacking = false;
-
-        var attack =
-            new Task().Name("Prepare").Time(1f).OnStart(_ => isAttacking = true).Next(
-            new Task().Name("Attack").Time(0.5f).Next(
-            new Task().Name("Cooldown").Time(2f).OnComplete(_ => isAttacking = false)));
-
-        Task.Run().Loop().OnRepeat(_ =>
-        {
-            if (Input.GetMouseButton(0))
-            {
-                if (!isAttacking)
-                {
-                    Core.Juggler.Add(attack);
-                }
-            }
-        });
-    }
-
-    void TestCircleUpdate()
-    {
-        Task.Run()
-            .Name("Circle Movement [update]")
-            .Time(1f)
-            .Loop()
-            .OnUpdate(data =>
-            {
-                this.transform.position = new Vector3(
-                    Mathf.Cos(data.Progress * Mathf.PI * 2f),
-                    Mathf.Sin(data.Progress * Mathf.PI * 2f)
-                );
-            });
-    }
-
-    void TestCircleLoop()
-    {
-        Task.Run()
-            .Name("Circle Movement [loop]")
-            .Loop()
-            .OnRepeat(data =>
-            {
-                this.transform.position = new Vector3(
-                    Mathf.Cos(data.CurrentLoop * 0.125f),
-                    Mathf.Sin(data.CurrentLoop * 0.125f)
-                );
             });
     }
 
@@ -204,87 +311,9 @@ public class Test : MonoBehaviour
         Task.Run()
             .Name("Turbo")
             .Loop()
-            .OnRepeat(_ =>
+            .OnUpdate(_ =>
             {
                 Time.timeScale = Input.GetKey(KeyCode.T) ? 5f : 1f;
-            });
-    }
-
-    void TestMoveSquare()
-    {
-        var t1 = new Task();
-        var t2 = new Task();
-        var t3 = new Task();
-        var t4 = new Task();
-
-        t1
-            .Name("Up")
-            .Delay(0.25f)
-            .Time(1f)
-            .OnUpdate(_ => this.transform.position += Vector3.up * Time.deltaTime)
-            .Next(t2);
-
-        t2
-            .Name("Left")
-            .Delay(0.25f)
-            .Time(1f)
-            .OnUpdate(_ => this.transform.position += Vector3.left * Time.deltaTime)
-            .Next(t3);
-
-        t3
-            .Name("Down")
-            .Delay(0.25f)
-            .Time(1f)
-            .OnUpdate(_ => this.transform.position += Vector3.down * Time.deltaTime)
-            .Next(t4);
-
-        t4
-            .Name("Right")
-            .Delay(0.25f)
-            .Time(1f)
-            .OnUpdate(_ => this.transform.position += Vector3.right * Time.deltaTime)
-            .Next(t1);
-
-        Core.Juggler.Add(t1);
-    }
-
-    void TestMoveDelay()
-    {
-        Task.Run()
-        .Loop()
-        .OnUpdate(t =>
-        {
-            if (Input.GetMouseButton(0))
-            {
-                Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                pos.z = 0f;
-
-                Task.Run()
-                    .Time(1f)
-                    .OnComplete(_ => this.transform.position = pos);
-            }
-        });
-    }
-
-    void TestSwitchPositionsFromList()
-    {
-        Vector3[] positions = new Vector3[3];
-        positions[0] = new Vector3(-1f, -1f, 0f);
-        positions[1] = new Vector3(0f, 0f, 0f);
-        positions[2] = new Vector3(1f, 1f, 0f);
-
-        int posIndex = 0;
-
-        Task task = Task.Run()
-            .Delay(1f)
-            .Time(0.25f)
-            .Loop()
-            .OnRepeat(_ =>
-            {
-                posIndex++;
-                posIndex %= positions.Length;
-
-                this.transform.position = positions[posIndex];
             });
     }
 }
