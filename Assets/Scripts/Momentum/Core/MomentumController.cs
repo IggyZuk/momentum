@@ -2,7 +2,7 @@
 
 namespace Momentum
 {
-    public class Controller : MonoBehaviour
+    public class MomentumController : MonoBehaviour
     {
         [SerializeField] Juggler juggler;
 
