@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Momentum
 {
@@ -10,6 +10,11 @@ namespace Momentum
         public void AddTask(Task task)
         {
             tasks.Add(task);
+        }
+
+        public void RemoveTask(Task task)
+        {
+            tasks.Remove(task);
         }
 
         public void StopAllTasks()

@@ -8,6 +8,7 @@ public class Test : MonoTaskable
 
     void Awake()
     {
+        TestRemoveTaskFromTaskable();
         //TestGameObjectDestroy();
         //TestStop();
         //TestTaskable();
@@ -20,6 +21,24 @@ public class Test : MonoTaskable
         //TestAttack();
         TestMoveAndScale();
         TestTurbo();
+    }
+
+    void TestRemoveTaskFromTaskable()
+    {
+        Taskable taskable = new Taskable();
+
+        Task t = Task.Run(taskable)
+            .Name("Taskable[log]")
+            .Time(1f)
+            .Loop()
+            .OnRepeat(data => Debug.Log("Running Taskable"));
+
+        taskable.RemoveTask(t);
+
+        Task.Run(taskable)
+            .Name("Taskable[remove]")
+            .Time(5f)
+            .OnComplete(data => taskable.StopAllTasks());
     }
 
     void TestGameObjectDestroy()

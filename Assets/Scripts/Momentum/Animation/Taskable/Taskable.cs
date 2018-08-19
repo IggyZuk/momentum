@@ -11,6 +11,11 @@ namespace Momentum
             tasks.Add(task);
         }
 
+        public void RemoveTask(Task task)
+        {
+            tasks.Remove(task);
+        }
+
         public void StopAllTasks()
         {
             foreach (Task task in tasks)
