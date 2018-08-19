@@ -8,7 +8,8 @@ public class Test : MonoTaskable
 
     void Awake()
     {
-        TestRemoveTaskFromTaskable();
+        TestOrder();
+        //TestRemoveTaskFromTaskable();
         //TestGameObjectDestroy();
         //TestStop();
         //TestTaskable();
@@ -21,6 +22,33 @@ public class Test : MonoTaskable
         //TestAttack();
         TestMoveAndScale();
         TestTurbo();
+    }
+
+    void TestOrder()
+    {
+        bool locker = false;
+
+        Task.Run(this)
+            .Name("Runner 1")
+            .Order(-1)
+            .Time(5f)
+            .OnUpdate(data => Debug.Log("Runner 1: " + data.Progress))
+            .OnComplete(data =>
+            {
+                Debug.Log(!locker ? "Runner 1: wins!" : "Runner 1: lost!");
+                if (!locker) locker = true;
+            });
+
+        Task.Run(this)
+            .Name("Runner 2")
+            .Order(1)
+            .Time(5f)
+            .OnUpdate(data => Debug.Log("Runner 2: " + data.Progress))
+            .OnComplete(data =>
+            {
+                Debug.Log(!locker ? "Runner 2: wins!" : "Runner 2: lost!");
+                if (!locker) locker = true;
+            });
     }
 
     void TestRemoveTaskFromTaskable()

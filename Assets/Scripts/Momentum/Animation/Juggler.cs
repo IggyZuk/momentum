@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Momentum
 {
-    [System.Serializable]
+    [Serializable]
     public class Juggler
     {
         [SerializeField] List<Task> tasks = new List<Task>();
@@ -11,6 +12,7 @@ namespace Momentum
         public void Add(Task task)
         {
             tasks.Add(task);
+            SortByOrder();
         }
 
         public void Remove(Task task)
@@ -20,15 +22,16 @@ namespace Momentum
 
         public void Update(float deltaTime)
         {
-            for (int i = tasks.Count - 1; i >= 0; i--)
+            for (int i = 0; i < tasks.Count; i++)
             {
                 Task task = tasks[i];
                 task.Update(deltaTime);
 
-                if (!task.IsActive)
+                if (!task.Data.IsActive)
                 {
                     task.Reset();
                     Remove(task);
+                    i--;
                 }
             }
         }
@@ -36,6 +39,11 @@ namespace Momentum
         public void Purge()
         {
             tasks.Clear();
+        }
+
+        public void SortByOrder()
+        {
+            tasks.Sort((a, b) => a.Data.Order.CompareTo(b.Data.Order));
         }
     }
 }

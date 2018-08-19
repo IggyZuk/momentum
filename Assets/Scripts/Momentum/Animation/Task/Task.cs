@@ -15,7 +15,7 @@ namespace Momentum
 
         const float FixedDeltaTime = 0.02f;
 
-        public bool IsActive { get { return data.IsActive; } }
+        public TaskData Data { get { return data; } }
 
         public Task(ITaskable taskable) : this()
         {
@@ -56,6 +56,13 @@ namespace Momentum
         public Task Name(string name)
         {
             this.name = name;
+            return this;
+        }
+
+        public Task Order(int order)
+        {
+            data.Order = order;
+            Core.Juggler.SortByOrder();
             return this;
         }
 

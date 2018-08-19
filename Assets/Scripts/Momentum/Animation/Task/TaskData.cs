@@ -7,6 +7,8 @@ namespace Momentum
     {
         [SerializeField] bool isActive;
 
+        [SerializeField] int order;
+
         [SerializeField] float time;
         [SerializeField] float currentTime;
 
@@ -29,6 +31,12 @@ namespace Momentum
         {
             get { return isActive; }
             set { isActive = value; }
+        }
+
+        public int Order
+        {
+            get { return order; }
+            set { order = value; }
         }
 
         public float CurrentTime
