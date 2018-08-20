@@ -3,7 +3,7 @@
 namespace Momentum
 {
     [System.Serializable]
-    public class Task
+    public class Task : System.IComparable<Task>
     {
         [SerializeField] string name = string.Empty;
         [SerializeField] TaskData data;
@@ -62,7 +62,13 @@ namespace Momentum
         public Task Order(int order)
         {
             data.Order = order;
-            Core.Juggler.SortByOrder();
+
+            if (data.IsActive)
+            {
+                Core.Juggler.Remove(this);
+                Core.Juggler.Add(this);
+            }
+
             return this;
         }
 
@@ -197,6 +203,11 @@ namespace Momentum
 
             if (onComplete != null) onComplete(data);
             if (data.Next != null) data.Next.Start();
+        }
+
+        public int CompareTo(Task other)
+        {
+            return this.data.Order - other.data.Order;
         }
     }
 }

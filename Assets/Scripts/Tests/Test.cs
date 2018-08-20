@@ -8,7 +8,8 @@ public class Test : MonoTaskable
 
     void Awake()
     {
-        TestOrder();
+        TestOrderTwo();
+        //TestOrder();
         //TestRemoveTaskFromTaskable();
         //TestGameObjectDestroy();
         //TestStop();
@@ -20,8 +21,36 @@ public class Test : MonoTaskable
         //TestCircleUpdate();
         //TestCircleLoop();
         //TestAttack();
-        TestMoveAndScale();
+        //TestMoveAndScale();
         TestTurbo();
+    }
+
+    void TestOrderTwo()
+    {
+        Task t1 = new Task().Name("Task(1)[3]").Order(3).Loop();
+        Task t2 = new Task().Name("Task(2)[2]").Order(2).Loop();
+        Task t3 = new Task().Name("Task(3)[1]").Order(1).Loop();
+
+        t1.Start();
+        t2.Start();
+        t3.Start();
+
+        Task.Run().Name("Task(4)[2]").Order(2).Loop();
+        Task.Run().Name("Task(5)[0]").Order(0).Loop();
+        Task.Run().Name("Task(6)[5]").Order(5).Loop();
+
+        Task t7 = new Task().Name("Task(7)[3]").Order(3).Loop();
+        Task t8 = new Task().Name("Task(8)[2]").Order(2).Loop();
+        Task t9 = new Task().Name("Task(9)[1]").Order(1).Loop();
+
+        t9.Start();
+        t8.Start();
+        t7.Start();
+
+        Task.Run().Name("Task(10)[0]").Loop();
+
+        Task t11 = new Task().Name("Task(11)[0]").Loop();
+        t11.Start();
     }
 
     void TestOrder()
@@ -294,6 +323,7 @@ public class Test : MonoTaskable
 
         Task.Run()
             .Name("L/R")
+            .Order(1000)
             .Time(0.5f)
             .Loop(3)
             .Random(0f)
@@ -357,6 +387,7 @@ public class Test : MonoTaskable
     {
         Task.Run()
             .Name("Turbo")
+            .Order(-1000)
             .Loop()
             .OnUpdate(_ =>
             {

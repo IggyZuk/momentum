@@ -11,8 +11,7 @@ namespace Momentum
 
         public void Add(Task task)
         {
-            tasks.Add(task);
-            SortByOrder();
+            AddSorted(task);
         }
 
         public void Remove(Task task)
@@ -41,9 +40,27 @@ namespace Momentum
             tasks.Clear();
         }
 
-        public void SortByOrder()
+        void AddSorted(Task task)
         {
-            tasks.Sort((a, b) => a.Data.Order.CompareTo(b.Data.Order));
+            if (tasks.Count == 0)
+            {
+                tasks.Add(task);
+                return;
+            }
+            if (tasks[tasks.Count - 1].Data.Order < task.Data.Order)
+            {
+                tasks.Add(task);
+                return;
+            }
+            if (tasks[0].Data.Order >= task.Data.Order)
+            {
+                tasks.Insert(0, task);
+                return;
+            }
+
+            int index = tasks.BinarySearch(task);
+            if (index < 0) index = ~index;
+            tasks.Insert(index, task);
         }
     }
 }
