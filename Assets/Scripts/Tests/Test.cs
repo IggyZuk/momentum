@@ -1,15 +1,15 @@
 ﻿using Momentum;
 using UnityEngine;
 
-public class Test : MonoTaskable
+public class Test : MonoBehaviour
 {
     [SerializeField] Vector3 pos1;
     [SerializeField] Vector3 pos2;
 
     void Awake()
     {
-        TestOrderTwo();
-        //TestOrder();
+        //TestOrderTwo();
+        TestOrder();
         //TestRemoveTaskFromTaskable();
         //TestGameObjectDestroy();
         //TestStop();
@@ -162,16 +162,18 @@ public class Test : MonoTaskable
     {
         bool isAttacking = false;
 
-        Task attackTask = new Task(this);
+        Taskable taskable = new Taskable();
+
+        Task attackTask = new Task(taskable);
 
         attackTask
             .Name("Prepare")
             .Time(1f)
             .OnStart(_ => isAttacking = true)
-            .Next(this)
+            .Next(taskable)
             .Name("Attack")
             .Time(0.5f)
-            .Next(this)
+            .Next(taskable)
             .Name("Cooldown")
             .Time(2f)
             .OnComplete(_ => isAttacking = false);

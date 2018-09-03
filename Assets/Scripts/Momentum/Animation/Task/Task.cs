@@ -37,6 +37,19 @@ namespace Momentum
             return new Task(taskable).Start();
         }
 
+        public static Task Run(Component component)
+        {
+            return Run(component.gameObject);
+        }
+
+        public static Task Run(GameObject gameObject)
+        {
+            ITaskable taskable = gameObject.GetComponent<MonoTaskable>() ??
+                gameObject.AddComponent<MonoTaskable>();
+
+            return new Task(taskable).Start();
+        }
+
         public Task Start()
         {
             data.IsActive = true;

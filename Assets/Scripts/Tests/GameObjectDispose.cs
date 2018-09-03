@@ -1,7 +1,7 @@
 ﻿using Momentum;
 using UnityEngine;
 
-public class GameObjectDispose : MonoTaskable
+public class GameObjectDispose : MonoBehaviour
 {
     void Awake()
     {
