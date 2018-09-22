@@ -18,14 +18,13 @@ namespace Momentum
         [SerializeField] int loops;
         [SerializeField] uint currentLoop;
 
-        [SerializeField] Task next;
+        [System.NonSerialized] Task task;
+        [System.NonSerialized] Task next;
 
         public TaskData(Task task)
         {
-            this.Task = task;
+            this.task = task;
         }
-
-        public Task Task { get; private set; }
 
         public bool IsActive
         {
@@ -79,6 +78,8 @@ namespace Momentum
             get { return currentLoop; }
             set { currentLoop = value; }
         }
+
+        public Task Task { get { return task; } }
 
         public Task Next
         {

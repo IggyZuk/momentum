@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Momentum
 {
@@ -208,6 +209,32 @@ namespace Momentum
         public int CompareTo(Task other)
         {
             return this.data.Order - other.data.Order;
+        }
+
+        public bool IsActive()
+        {
+            return data.IsActive;
+        }
+
+        public bool IsActiveWithChildren()
+        {
+            if (IsActive()) return true;
+
+            HashSet<Task> tasks = new HashSet<Task> { this };
+
+            Task next = data.Next;
+
+            while (next != null)
+            {
+                if (next.IsActive()) return true;
+
+                if (tasks.Contains(next)) return false;
+
+                tasks.Add(next);
+                next = next.data.Next;
+            }
+
+            return false;
         }
     }
 }
