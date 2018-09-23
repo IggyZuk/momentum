@@ -6,9 +6,10 @@ namespace Momentum
     {
         void Start()
         {
+            TestGravity();
             //TestOrderTwo();
             //TestOrder();
-            TestRemoveTaskFromTaskable();
+            //TestRemoveTaskFromTaskable();
             //TestStop();
             //TestTaskable();
             //TestNext();
@@ -16,6 +17,37 @@ namespace Momentum
             //TestCircleUpdate();
             //TestCircleLoop();
             TestTurbo();
+        }
+
+        void TestGravity()
+        {
+            float y = 0f;
+            bool isMouseDown = false;
+
+            Task.Run(this)
+                .Name("Gravity[input]")
+                .Loop()
+                .OnUpdate(_ => isMouseDown = Input.GetMouseButton(0));
+
+            Task.Run(this)
+                .Name("Gravity[gravity]")
+                .Time(0.1f)
+                .Loop()
+                .OnRepeat(_ =>
+                {
+                    y += (isMouseDown ? 1f : -1f) * Time.deltaTime;
+                    y = Mathf.Clamp01(y);
+                });
+
+            Task.Run(this)
+                .Name("Gravity[movement]")
+                .Loop()
+                .OnUpdate(_ => MoveY(y));
+        }
+
+        void MoveY(float unitY)
+        {
+            this.transform.position = Vector3.LerpUnclamped(Vector3.down, Vector3.up, unitY);
         }
 
         void TestOrderTwo()
