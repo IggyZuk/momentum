@@ -4,7 +4,7 @@ namespace Momentum
 {
     public class Taskable : ITaskable
     {
-        readonly List<Task> tasks = new List<Task>();
+        readonly HashSet<Task> tasks = new HashSet<Task>();
 
         public void AddTask(Task task)
         {

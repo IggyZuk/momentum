@@ -6,6 +6,8 @@ namespace Momentum
     [Serializable]
     public class Task : IComparable<Task>
     {
+        const float FixedDeltaTime = 0.02f;
+
         [UnityEngine.SerializeField] string name = string.Empty;
         [UnityEngine.SerializeField] TaskData data;
 
@@ -14,7 +16,7 @@ namespace Momentum
         Action<TaskData> onRepeat;
         Action<TaskData> onComplete;
 
-        const float FixedDeltaTime = 0.02f;
+        HashSet<ITaskable> taskables;
 
         public TaskData Data { get { return data; } }
 
@@ -26,6 +28,7 @@ namespace Momentum
         public Task()
         {
             data = new TaskData(this);
+            taskables = new HashSet<ITaskable>();
         }
 
         // Creates a new tasks and starts it right away
@@ -50,12 +53,37 @@ namespace Momentum
             return this;
         }
 
-        // Stops the tasks by removing it from the juggler
+        // Stops the tasks by removing it from the juggler and all of the taskables
         public void Stop()
         {
             data.IsActive = false;
 
             Juggler.Instance.Remove(this);
+
+            foreach (ITaskable taskable in taskables)
+            {
+                RemoveFrom(taskable);
+            }
+        }
+
+        // Stops the task and all of its children
+        public void StopAll()
+        {
+            if (IsActive()) Stop();
+
+            HashSet<Task> tasks = new HashSet<Task> { this };
+
+            Task next = data.Next;
+
+            while (next != null)
+            {
+                if (next.IsActive()) next.Stop();
+
+                if (tasks.Contains(next)) break;
+
+                tasks.Add(next);
+                next = next.data.Next;
+            }
         }
 
         // Gives a name to the task that is visible inside the inspector
@@ -122,33 +150,44 @@ namespace Momentum
         // Adds task to a specific taskable
         public Task AddTo(ITaskable taskable)
         {
+            taskables.Add(taskable);
             taskable.AddTask(this);
             return this;
         }
 
+        // Removes task from a specific taskable
+        public Task RemoveFrom(ITaskable taskable)
+        {
+            if (taskables.Contains(taskable))
+            {
+                taskable.RemoveTask(this);
+            }
+            return this;
+        }
+
         // Sets a callback that will execute on start
-        public Task OnStart(System.Action<TaskData> callback)
+        public Task OnStart(Action<TaskData> callback)
         {
             onStart = callback;
             return this;
         }
 
         // Sets a callback that will execute every frame
-        public Task OnUpdate(System.Action<TaskData> callback)
+        public Task OnUpdate(Action<TaskData> callback)
         {
             onUpdate = callback;
             return this;
         }
 
         // Sets a callback that will execute on repeat
-        public Task OnRepeat(System.Action<TaskData> callback)
+        public Task OnRepeat(Action<TaskData> callback)
         {
             onRepeat = callback;
             return this;
         }
 
         // Sets a callback that will execute when the task is completed
-        public Task OnComplete(System.Action<TaskData> callback)
+        public Task OnComplete(Action<TaskData> callback)
         {
             onComplete = callback;
             return this;
@@ -177,14 +216,14 @@ namespace Momentum
             {
                 data.CurrentRandom = UnityEngine.Random.Range(-data.Random, data.Random);
 
-                if (onStart != null) onStart(data);
+                onStart?.Invoke(data);
             }
         }
 
         void Advance(float deltaTime)
         {
             data.CurrentTime += deltaTime;
-            if (onUpdate != null) onUpdate(data);
+            onUpdate?.Invoke(data);
         }
 
         void TryRepeat()
@@ -213,15 +252,16 @@ namespace Momentum
 
             if (data.Loops == -1 || data.CurrentLoop <= data.Loops)
             {
-                if (onRepeat != null) onRepeat(data);
+                onRepeat?.Invoke(data);
             }
         }
 
         void Complete()
         {
-            data.IsActive = false;
+            onComplete?.Invoke(data);
 
-            if (onComplete != null) onComplete(data);
+            Stop();
+
             if (data.Next != null) data.Next.Start();
         }
 

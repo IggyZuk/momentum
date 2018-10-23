@@ -64,7 +64,7 @@ namespace Momentum
 
         public float Progress
         {
-            get { return currentTime / Mathf.Clamp(Mathf.Epsilon, Time, Time); }
+            get { return Mathf.Min(1f, currentTime / Mathf.Max(Mathf.Epsilon, Time)); }
         }
 
         public int Loops

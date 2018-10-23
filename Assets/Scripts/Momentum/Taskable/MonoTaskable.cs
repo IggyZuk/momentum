@@ -3,9 +3,10 @@ using UnityEngine;
 
 namespace Momentum
 {
+    [DisallowMultipleComponent]
     public class MonoTaskable : MonoBehaviour, ITaskable
     {
-        readonly List<Task> tasks = new List<Task>();
+        readonly HashSet<Task> tasks = new HashSet<Task>();
 
         public void AddTask(Task task)
         {
@@ -19,10 +20,8 @@ namespace Momentum
 
         public void StopAllTasks()
         {
-            foreach (Task task in tasks)
-            {
-                if (task != null) task.Stop();
-            }
+            HashSet<Task> tasksToStop = new HashSet<Task>(tasks);
+            foreach (Task task in tasksToStop) task.Stop();
             tasks.Clear();
         }
 

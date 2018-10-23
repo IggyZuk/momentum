@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Momentum
+namespace Momentum.Tests
 {
     // TIP: you can inherit from MonoTaskable and be able to call Task.Run(this)
 

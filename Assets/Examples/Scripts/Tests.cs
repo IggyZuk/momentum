@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Momentum
+namespace Momentum.Tests
 {
     public class Tests : MonoTaskable
     {

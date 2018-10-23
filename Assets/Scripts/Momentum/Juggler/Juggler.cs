@@ -26,6 +26,7 @@ namespace Momentum
         // Remove a task for the list
         public void Remove(Task task)
         {
+            buffer.Remove(task);
             tasks.Remove(task);
         }
 

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace Momentum
+namespace Momentum.Tests
 {
     public class Attacking : MonoTaskable
     {
