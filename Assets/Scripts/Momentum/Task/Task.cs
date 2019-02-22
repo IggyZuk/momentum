@@ -43,6 +43,12 @@ namespace Momentum
             return new Task(taskable).Start();
         }
 
+        // Starts the task by adding it into the juggler and keeping track of taskable
+        public Task Start(ITaskable taskable)
+        {
+            return Start().AddTo(taskable);
+        }
+
         // Starts the task by adding it into the juggler
         public Task Start()
         {
