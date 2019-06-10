@@ -262,7 +262,7 @@ namespace Momentum
             }
         }
 
-        void Complete()
+        public void Complete()
         {
             onComplete?.Invoke(data);
 
