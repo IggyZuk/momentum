@@ -10,9 +10,9 @@ namespace Momentum.Tests
         {
             Task.Run(this.GetTaskable())
                 .Name(name)
-                .Time(1f)
+                .Duration(1f)
                 .Loop(life)
-                .OnRepeat(data => Debug.LogFormat("{0} has {1} life left", name, life - data.CurrentLoop))
+                .OnLoop(data => Debug.LogFormat("{0} has {1} life left", name, life - data.CurrentLoop))
                 .OnComplete(_ => Destroy(this.gameObject));
         }
     }

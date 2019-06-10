@@ -22,7 +22,7 @@ namespace Momentum.Tests
 
                         Task.Run(this)
                             .Name("FollowDelay[sample]")
-                            .Time(delay)
+                            .Duration(delay)
                             .OnComplete(__ =>
                             {
                                 Debug.Log(pos);

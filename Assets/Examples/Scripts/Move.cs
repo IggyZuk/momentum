@@ -16,7 +16,7 @@ namespace Momentum.Tests
             Task.Run(this.GetTaskable())
                 .Name("L/R")
                 .Order(1000)
-                .Time(0.5f)
+                .Duration(0.5f)
                 .Loop(3)
                 .Random(0f)
                 .OnUpdate(data =>
@@ -35,7 +35,7 @@ namespace Momentum.Tests
                     );
                     this.GetComponent<MeshRenderer>().material.color = c;
                 })
-                .OnRepeat(data =>
+                .OnLoop(data =>
                 {
                     prevColor = nextColor;
                     nextColor = new Color(Random.value, Random.value, Random.value);
@@ -46,7 +46,7 @@ namespace Momentum.Tests
                 {
                     Task.Run(this.GetTaskable())
                          .Name("Wait/Scale")
-                         .Time(1)
+                         .Duration(1)
                          .Random(0.7f)
                          .OnComplete(_ =>
                          {
@@ -56,7 +56,7 @@ namespace Momentum.Tests
 
                              Task.Run(this.GetTaskable())
                                 .Name("Smooth Scale")
-                                .Time(0.5f)
+                                .Duration(0.5f)
                                 .OnUpdate(__ =>
                                 {
                                     var s = Vector3.LerpUnclamped(
@@ -69,7 +69,7 @@ namespace Momentum.Tests
 
                              Task.Run(this.GetTaskable())
                                 .Name("Wait/Loop")
-                                .Time(1f)
+                                .Duration(1f)
                                 .OnComplete(__ => data.Task.Start());
                          });
                 });

@@ -2,26 +2,28 @@
 
 namespace Momentum
 {
+    /// <summary>
+    /// State that <see cref="T:Momentum.Task"/> uses
+    /// </summary>
     [System.Serializable]
-    public class TaskData
+    public class State
     {
         [SerializeField] bool isActive;
 
         [SerializeField] int order;
 
-        [SerializeField] float time;
-        [SerializeField] float currentTime;
+        [SerializeField] float totalDuration;
+        [SerializeField] float currentDuration;
 
-        [SerializeField] float random;
+        [SerializeField] float totalRandom;
         [SerializeField] float currentRandom;
 
-        [SerializeField] int loops;
+        [SerializeField] int totalLoops;
         [SerializeField] uint currentLoop;
 
-        [System.NonSerialized] Task task;
-        [System.NonSerialized] Task next;
+        [System.NonSerialized] readonly Task task;
 
-        public TaskData(Task task)
+        public State(Task task)
         {
             this.task = task;
         }
@@ -38,16 +40,22 @@ namespace Momentum
             set { order = value; }
         }
 
-        public float CurrentTime
+        public float Duration
         {
-            get { return currentTime; }
-            set { currentTime = value; }
+            get { return totalDuration + currentRandom; }
+            set { totalDuration = value; }
+        }
+
+        public float CurrentDuration
+        {
+            get { return currentDuration; }
+            set { currentDuration = value; }
         }
 
         public float Random
         {
-            get { return random; }
-            set { random = value; }
+            get { return totalRandom; }
+            set { totalRandom = value; }
         }
 
         public float CurrentRandom
@@ -56,21 +64,15 @@ namespace Momentum
             set { currentRandom = value; }
         }
 
-        public float Time
-        {
-            get { return time + currentRandom; }
-            set { time = value; }
-        }
-
         public float Progress
         {
-            get { return Mathf.Min(1f, currentTime / Mathf.Max(Mathf.Epsilon, Time)); }
+            get { return Mathf.Min(1f, currentDuration / Mathf.Max(Mathf.Epsilon, Duration)); }
         }
 
         public int Loops
         {
-            get { return loops; }
-            set { loops = value; }
+            get { return totalLoops; }
+            set { totalLoops = value; }
         }
 
         public uint CurrentLoop
@@ -80,11 +82,5 @@ namespace Momentum
         }
 
         public Task Task { get { return task; } }
-
-        public Task Next
-        {
-            get { return next; }
-            set { next = value; }
-        }
     }
 }

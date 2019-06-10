@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace Momentum
 {
+    /// <summary>
+    /// Collection of ease functions
+    /// </summary>
     public static class Ease
     {
         const float HALF_PI = Mathf.PI / 2;

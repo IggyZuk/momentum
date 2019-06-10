@@ -6,7 +6,10 @@ namespace Momentum.Tests
     {
         void Start()
         {
-            TestGravity();
+            TestSequence2();
+            //TestSequence1();
+            //TestNext();
+            //TestGravity();
             //TestOrderTwo();
             //TestOrder();
             //TestRemoveTaskFromTaskable();
@@ -17,6 +20,42 @@ namespace Momentum.Tests
             //TestCircleUpdate();
             //TestCircleLoop();
             TestTurbo();
+        }
+
+        void TestSequence1()
+        {
+            new Sequence(this.GetTaskable())
+                .AppendDelay(5f)
+                .AppendCallback(() => Debug.Log("Hello!"))
+                .Start();
+        }
+
+        void TestSequence2()
+        {
+            new Sequence(this.GetTaskable())
+                .Append(new Task()
+                    .Name("One")
+                    .Duration(1f)
+                    .OnComplete(s => Debug.Log("1: " + s.Duration)))
+                .AppendDelay(1f)
+                .AppendCallback(() => Debug.Log("Hello World!"))
+                .AppendDelay(1.25f)
+                .Append(new Task()
+                    .Name("Two")
+                    .Duration(2f)
+                    .OnComplete(s => Debug.Log("2: " + s.Duration)))
+                .Append(new Task()
+                    .Name("Three")
+                    .Duration(3f)
+                    .OnComplete(s => Debug.Log("3: " + s.Duration)))
+                .AppendCallback(() => Debug.Log("A"))
+                .AppendCallback(() => Debug.Log("B"))
+                .AppendCallback(() => Debug.Log("C"))
+                .AppendDelay(3f)
+                .AppendCallback(() => Debug.Log("D"))
+                .AppendCallback(() => Debug.Log("E"))
+                .AppendCallback(() => Debug.Log("F"))
+                .Start();
         }
 
         void TestGravity()
@@ -31,9 +70,9 @@ namespace Momentum.Tests
 
             Task.Run(this)
                 .Name("Gravity[gravity]")
-                .Time(0.1f)
+                .Duration(0.1f)
                 .Loop()
-                .OnRepeat(_ =>
+                .OnLoop(_ =>
                 {
                     y += (isMouseDown ? 1f : -1f) * Time.deltaTime;
                     y = Mathf.Clamp01(y);
@@ -85,7 +124,7 @@ namespace Momentum.Tests
             Task.Run(this)
                 .Name("Runner 1")
                 .Order(-1)
-                .Time(5f)
+                .Duration(5f)
                 .OnUpdate(data => Debug.Log("Runner 1: " + data.Progress))
                 .OnComplete(data =>
                 {
@@ -96,7 +135,7 @@ namespace Momentum.Tests
             Task.Run(this)
                 .Name("Runner 2")
                 .Order(1)
-                .Time(5f)
+                .Duration(5f)
                 .OnUpdate(data => Debug.Log("Runner 2: " + data.Progress))
                 .OnComplete(data =>
                 {
@@ -111,15 +150,15 @@ namespace Momentum.Tests
 
             Task t = Task.Run(taskable)
                 .Name("Taskable[log]")
-                .Time(1f)
+                .Duration(1f)
                 .Loop()
-                .OnRepeat(data => Debug.Log("Running Taskable"));
+                .OnLoop(data => Debug.Log("Running Taskable"));
 
             taskable.RemoveTask(t);
 
             Task.Run(taskable)
                 .Name("Taskable[remove]")
-                .Time(5f)
+                .Duration(5f)
                 .OnComplete(data => taskable.StopAllTasks());
         }
 
@@ -127,9 +166,9 @@ namespace Momentum.Tests
         {
             Task.Run()
                 .Name("Stop[main]")
-                .Time(1f)
+                .Duration(1f)
                 .Loop()
-                .OnRepeat(data =>
+                .OnLoop(data =>
                 {
                     Debug.Log(10 - data.CurrentLoop);
                     if (data.CurrentLoop == 10) data.Task.Stop();
@@ -142,10 +181,10 @@ namespace Momentum.Tests
 
             Task.Run()
                 .Name("Disposable[main]")
-                .Time(1f)
+                .Duration(1f)
                 .Loop()
                 .AddTo(taskable)
-                .OnRepeat(data =>
+                .OnLoop(data =>
                 {
                     Debug.Log(10 - data.CurrentLoop);
                     if (data.CurrentLoop == 10) taskable.StopAllTasks();
@@ -160,29 +199,33 @@ namespace Momentum.Tests
 
         void TestNext()
         {
-            Task.Run().Name("Loop").Loop().OnRepeat(_ =>
-            {
-                Task t1 = new Task().Name("1").Time(2f).Loop(4).OnRepeat(data => Debug.Log("1: " + data.CurrentLoop));
-                Task t2 = new Task().Name("2").Time(1f).Loop(8).OnRepeat(data => Debug.Log("2: " + data.CurrentLoop));
-                Task t3 = new Task().Name("3").Time(0.5f).Loop(16).OnRepeat(data => Debug.Log("3: " + data.CurrentLoop));
-
-                if (Input.GetKeyDown(KeyCode.X))
+            Task.Run()
+                .Name("Loop")
+                .Loop()
+                .OnLoop(_ =>
                 {
-                    Task.Run()
-                        .Name("Starting...")
-                        .Time(3f)
-                        .Next(t1)
-                        .Next(t2)
-                        .Next(t3);
-                }
-            });
+                    if (Input.GetKeyDown(KeyCode.X))
+                    {
+                        var seq = new Sequence(this.GetTaskable())
+                            .Append(new Task().Name("1").Duration(1f).Loop(4).OnLoop(s => Debug.Log("1: " + s.CurrentLoop)))
+                            .AppendCallback(() => Debug.Log("First is done"))
+                            .Append(new Task().Name("2").Duration(0.5f).Loop(8).OnLoop(s => Debug.Log("2: " + s.CurrentLoop)))
+                            .AppendCallback(() => Debug.Log("Second is done"))
+                            .Append(new Task().Name("3").Duration(0.25f).Loop(16).OnLoop(s => Debug.Log("3: " + s.CurrentLoop)))
+                            .AppendCallback(() => Debug.Log("Third is done"))
+                            .Duration(3f)
+                            .Start();
+
+                        Task.Run().Loop().OnUpdate(__ => Debug.Log(seq.IsActive()));
+                    }
+                });
         }
 
         void TestCircleUpdate()
         {
             Task.Run(this)
                 .Name("Circle Movement [update]")
-                .Time(1f)
+                .Duration(1f)
                 .Loop()
                 .OnUpdate(data =>
                 {
@@ -198,7 +241,7 @@ namespace Momentum.Tests
             Task.Run(this)
                 .Name("Circle Movement [loop]")
                 .Loop()
-                .OnRepeat(data =>
+                .OnLoop(data =>
                 {
                     this.transform.position = new Vector3(
                         Mathf.Cos((data.CurrentLoop * 0.125f) % 360),
@@ -216,20 +259,21 @@ namespace Momentum.Tests
 
             int posIndex = 0;
 
-            Task task = Task.Run()
-                .Name("TestSwitchPositionsFromList[delay]")
-                .Time(1f)
-                .Next()
-                .Name("TestSwitchPositionsFromList[loop]")
-                .Time(0.25f)
-                .Loop()
-                .OnRepeat(_ =>
-                {
-                    posIndex++;
-                    posIndex %= positions.Length;
+            new Sequence(this.GetTaskable())
+                .AppendDelay(1f)
+                .Append(
+                    new Task()
+                        .Name("TestSwitchPositionsFromList[loop]")
+                        .Duration(0.25f)
+                        .Loop()
+                        .OnLoop(_ =>
+                        {
+                            posIndex++;
+                            posIndex %= positions.Length;
 
-                    this.transform.position = positions[posIndex];
-                });
+                            this.transform.position = positions[posIndex];
+                        }))
+                .Start();
         }
 
         void TestTurbo()

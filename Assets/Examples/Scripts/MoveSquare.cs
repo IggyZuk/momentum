@@ -6,52 +6,30 @@ namespace Momentum.Tests
     {
         void Start()
         {
-            Task up = new Task(this);
-            Task lt = new Task(this);
-            Task dw = new Task(this);
-            Task rt = new Task(this);
+            // TODO: make it loop
 
-            up
-                .Name("Up[delay]")
-                .Random(0.125f)
-                .Time(0.25f)
-                .Next(this)
-                .Name("Up")
-                .Time(1f)
-                .OnUpdate(_ => this.transform.position += Vector3.up * Time.deltaTime)
-                .Next(lt);
-
-            lt
-                .Name("Left[delay]")
-                .Random(0.125f)
-                .Time(0.25f)
-                .Next(this)
-                .Name("Left")
-                .Time(1f)
-                .OnUpdate(_ => this.transform.position += Vector3.left * Time.deltaTime)
-                .Next(dw);
-
-            dw
-                .Name("Down[delay]")
-                .Random(0.125f)
-                .Time(0.25f)
-                .Next(this)
-                .Name("Down")
-                .Time(1f)
-                .OnUpdate(_ => this.transform.position += Vector3.down * Time.deltaTime)
-                .Next(rt);
-
-            rt
-                .Name("Right[delay]")
-                .Random(0.125f)
-                .Time(0.25f)
-                .Next(this)
-                .Name("Right")
-                .Time(1f)
-                .OnUpdate(_ => this.transform.position += Vector3.right * Time.deltaTime)
-                .Next(up);
-
-            up.Start();
+            new Sequence(this.GetTaskable())
+                .AppendDelay(0.25f)
+                .Append(new Task()
+                    .Name("Up")
+                    .Duration(1f)
+                    .OnUpdate(_ => this.transform.position += Vector3.up * Time.deltaTime))
+                .AppendDelay(0.25f)
+                .Append(new Task()
+                    .Name("Left")
+                    .Duration(1f)
+                    .OnUpdate(_ => this.transform.position += Vector3.left * Time.deltaTime))
+                .AppendDelay(0.25f)
+                .Append(new Task()
+                    .Name("Down")
+                    .Duration(1f)
+                    .OnUpdate(_ => this.transform.position += Vector3.down * Time.deltaTime))
+                .AppendDelay(0.25f)
+                .Append(new Task()
+                    .Name("Right")
+                    .Duration(1f)
+                    .OnUpdate(_ => this.transform.position += Vector3.right * Time.deltaTime))
+                .Start();
         }
     }
 }

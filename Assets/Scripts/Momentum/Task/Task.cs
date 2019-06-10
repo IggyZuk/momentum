@@ -3,66 +3,88 @@ using System.Collections.Generic;
 
 namespace Momentum
 {
+    /// <summary>
+    /// Time object that updates every frame with exposed callbacks
+    /// </summary>
     [Serializable]
     public class Task : IComparable<Task>
     {
-        const float FixedDeltaTime = 0.02f;
+        public State State => state;
 
-        [UnityEngine.SerializeField] string name = string.Empty;
-        [UnityEngine.SerializeField] TaskData data;
+        protected const float FixedDeltaTime = 1f / 60f;
 
-        Action<TaskData> onStart;
-        Action<TaskData> onUpdate;
-        Action<TaskData> onRepeat;
-        Action<TaskData> onComplete;
+        [UnityEngine.SerializeField]
+        protected string name = string.Empty;
 
-        HashSet<ITaskable> taskables;
+        [UnityEngine.SerializeField]
+        protected State state;
 
-        public TaskData Data { get { return data; } }
+        protected Action<State> onStart;
+        protected Action<State> onUpdate;
+        protected Action<State> onLoop;
+        protected Action<State> onComplete;
+
+        protected readonly HashSet<ITaskable> taskables;
 
         public Task(ITaskable taskable) : this()
         {
             AddTo(taskable);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:Momentum.Task"/> class.
+        /// </summary>
         public Task()
         {
-            data = new TaskData(this);
+            state = new State(this);
             taskables = new HashSet<ITaskable>();
         }
 
-        // Creates a new tasks and starts it right away
+        /// <summary>
+        /// Creates a new tasks and starts it right away
+        /// </summary>
         public static Task Run()
         {
-            return new Task().Start();
+            return new Task()
+                .Start();
         }
 
-        // Creates a new tasks; adds it to a taskable; starts it right away
+        /// <summary>
+        /// Creates a new tasks; adds it to a taskable; starts it right away
+        /// </summary>
         public static Task Run(ITaskable taskable)
         {
-            return new Task(taskable).Start();
+            return new Task(taskable)
+                .Start();
         }
 
-        // Starts the task by adding it into the juggler and keeping track of taskable
+        /// <summary>
+        /// Starts the task by adding it into the <see cref="T:Momentum.Juggler"/> and keeping track of taskable
+        /// </summary>
         public Task Start(ITaskable taskable)
         {
-            return Start().AddTo(taskable);
+            return Start()
+                .AddTo(taskable);
         }
 
-        // Starts the task by adding it into the juggler
+        /// <summary>
+        /// Starts the task by adding it into the <see cref="T:Momentum.Juggler"/>
+        /// </summary>
         public Task Start()
         {
-            data.IsActive = true;
+            state.IsActive = true;
 
             Juggler.Instance.Add(this);
 
             return this;
         }
 
-        // Stops the tasks by removing it from the juggler and all of the taskables
-        public void Stop()
+        /// <summary>
+        /// Stops the tasks by removing it from the <see cref="T:Momentum.Juggler"/> and all of the taskables
+        /// </summary>
+        public virtual void Stop()
         {
-            data.IsActive = false;
+            state.IsActive = false;
 
             Juggler.Instance.Remove(this);
 
@@ -72,39 +94,23 @@ namespace Momentum
             }
         }
 
-        // Stops the task and all of its children
-        public void StopAll()
-        {
-            if (IsActive()) Stop();
-
-            HashSet<Task> tasks = new HashSet<Task> { this };
-
-            Task next = data.Next;
-
-            while (next != null)
-            {
-                if (next.IsActive()) next.Stop();
-
-                if (tasks.Contains(next)) break;
-
-                tasks.Add(next);
-                next = next.data.Next;
-            }
-        }
-
-        // Gives a name to the task that is visible inside the inspector
+        /// <summary>
+        /// Gives a name to the task that is visible inside the inspector
+        /// </summary>
         public Task Name(string name)
         {
             this.name = name;
             return this;
         }
 
-        // Sets the execution order for this task
+        /// <summary>
+        /// Sets the execurion order of the task
+        /// </summary>
         public Task Order(int order)
         {
-            data.Order = order;
+            state.Order = order;
 
-            if (data.IsActive)
+            if (state.IsActive)
             {
                 Juggler.Instance.Remove(this);
                 Juggler.Instance.Add(this);
@@ -113,47 +119,36 @@ namespace Momentum
             return this;
         }
 
-        // Sets the duration this task will run for
-        public Task Time(float time = 1f)
+        /// <summary>
+        /// Sets the duration of the task
+        /// </summary>
+        public Task Duration(float duration = 1f)
         {
-            data.Time = time;
+            state.Duration = duration;
             return this;
         }
 
-        // Sets the randomized value that affects the duration of the task: Time + Rand(-randomTime, +randomTime)
-        public Task Random(float randomTime = 0f)
+        /// <summary>
+        /// Randomizes the duration of the task
+        /// </summary>
+        public Task Random(float duration = 0f)
         {
-            data.Random = randomTime;
+            state.Random = duration;
             return this;
         }
 
-        // Sets the amount of loops this task will perform; -1 is infinite
+        /// <summary>
+        /// Loop task x times (-1 for infinite)
+        /// </summary>
         public Task Loop(int loops = -1)
         {
-            data.Loops = loops;
+            state.Loops = loops;
             return this;
         }
 
-        // Creates a new task; sets it as next, and returns it
-        public Task Next()
-        {
-            return Next(new Task());
-        }
-
-        // Sets the next task that will run after this one completes; adds it to a taskable
-        public Task Next(ITaskable taskable)
-        {
-            return Next(new Task(taskable));
-        }
-
-        // Sets the next task that will run after this one completes
-        public Task Next(Task task)
-        {
-            data.Next = task;
-            return task;
-        }
-
-        // Adds task to a specific taskable
+        /// <summary>
+        /// Adds task to taskable
+        /// </summary>
         public Task AddTo(ITaskable taskable)
         {
             taskables.Add(taskable);
@@ -161,7 +156,9 @@ namespace Momentum
             return this;
         }
 
-        // Removes task from a specific taskable
+        /// <summary>
+        /// Removes task from taskable
+        /// </summary>
         public Task RemoveFrom(ITaskable taskable)
         {
             if (taskables.Contains(taskable))
@@ -171,44 +168,56 @@ namespace Momentum
             return this;
         }
 
-        // Sets a callback that will execute on start
-        public Task OnStart(Action<TaskData> callback)
+        /// <summary>
+        /// Callback for when the task is started
+        /// </summary>
+        public Task OnStart(Action<State> callback)
         {
-            onStart = callback;
+            onStart += callback;
             return this;
         }
 
-        // Sets a callback that will execute every frame
-        public Task OnUpdate(Action<TaskData> callback)
+        /// <summary>
+        /// Callback for when the task is updated
+        /// </summary>
+        public Task OnUpdate(Action<State> callback)
         {
-            onUpdate = callback;
+            onUpdate += callback;
             return this;
         }
 
-        // Sets a callback that will execute on repeat
-        public Task OnRepeat(Action<TaskData> callback)
+        /// <summary>
+        /// Callback for when the task is looped
+        /// </summary>
+        public Task OnLoop(Action<State> callback)
         {
-            onRepeat = callback;
+            onLoop += callback;
             return this;
         }
 
-        // Sets a callback that will execute when the task is completed
-        public Task OnComplete(Action<TaskData> callback)
+        /// <summary>
+        /// Callback for when the task is completed
+        /// </summary>
+        public Task OnComplete(Action<State> callback)
         {
-            onComplete = callback;
+            onComplete += callback;
             return this;
         }
 
-        // Resets all values
+        /// <summary>
+        /// Resets all values
+        /// </summary>
         public void Reset()
         {
-            data.IsActive = false;
-            data.CurrentTime = 0f;
-            data.CurrentRandom = 0f;
-            data.CurrentLoop = 0;
+            state.IsActive = false;
+            state.CurrentDuration = 0f;
+            state.CurrentRandom = 0f;
+            state.CurrentLoop = 0;
         }
 
-        // Updates the task
+        /// <summary>
+        /// Updates the task
+        /// </summary>
         public void Update(float deltaTime)
         {
             TryStart();
@@ -218,29 +227,29 @@ namespace Momentum
 
         void TryStart()
         {
-            if (data.CurrentTime <= 0f && (data.Loops == 0 || data.CurrentLoop == 0))
+            if (state.CurrentDuration <= 0f && (state.Loops == 0 || state.CurrentLoop == 0))
             {
-                data.CurrentRandom = UnityEngine.Random.Range(-data.Random, data.Random);
+                state.CurrentRandom = UnityEngine.Random.Range(-state.Random, state.Random);
 
-                onStart?.Invoke(data);
+                onStart?.Invoke(state);
             }
         }
 
-        void Advance(float deltaTime)
+        protected void Advance(float deltaTime)
         {
-            data.CurrentTime += deltaTime;
-            onUpdate?.Invoke(data);
+            state.CurrentDuration += deltaTime;
+            onUpdate?.Invoke(state);
         }
 
-        void TryRepeat()
+        protected void TryRepeat()
         {
-            while (data.CurrentTime >= data.Time)
+            while (state.CurrentDuration >= state.Duration)
             {
-                if (data.Loops == -1 || data.CurrentLoop < data.Loops)
+                if (state.Loops == -1 || state.CurrentLoop < state.Loops)
                 {
                     Repeat();
                 }
-                else if (data.CurrentLoop == data.Loops)
+                else if (state.CurrentLoop == state.Loops)
                 {
                     Complete();
                     break;
@@ -248,61 +257,43 @@ namespace Momentum
             }
         }
 
-        void Repeat()
+        protected void Repeat()
         {
-            data.CurrentLoop++;
+            state.CurrentLoop++;
 
-            data.CurrentTime -= UnityEngine.Mathf.Clamp(data.Time, FixedDeltaTime, data.Time);
+            state.CurrentDuration -= UnityEngine.Mathf.Clamp(state.Duration, FixedDeltaTime, state.Duration);
 
-            data.CurrentRandom = UnityEngine.Random.Range(-data.Random, data.Random);
+            state.CurrentRandom = UnityEngine.Random.Range(-state.Random, state.Random);
 
-            if (data.Loops == -1 || data.CurrentLoop <= data.Loops)
+            if (state.Loops == -1 || state.CurrentLoop <= state.Loops)
             {
-                onRepeat?.Invoke(data);
+                onLoop?.Invoke(state);
             }
         }
 
+        /// <summary>
+        /// Successfully complete the task
+        /// </summary>
         public void Complete()
         {
-            onComplete?.Invoke(data);
-
+            onComplete?.Invoke(state);
             Stop();
-
-            if (data.Next != null) data.Next.Start();
         }
 
-        // Compare is used within the Juggler for sorting
+        /// <summary>
+        /// Used for sorting inside <see cref="T:Momentum.Juggler"/>
+        /// </summary>
         public int CompareTo(Task other)
         {
-            return this.data.Order - other.data.Order;
+            return this.state.Order - other.state.Order;
         }
 
-        // Says whether task is active
-        public bool IsActive()
+        /// <summary>
+        /// Is the task currently running?
+        /// </summary>
+        public virtual bool IsActive()
         {
-            return data.IsActive;
-        }
-
-        // Says whether task is active or any of its children
-        public bool IsActiveWithChildren()
-        {
-            if (IsActive()) return true;
-
-            HashSet<Task> tasks = new HashSet<Task> { this };
-
-            Task next = data.Next;
-
-            while (next != null)
-            {
-                if (next.IsActive()) return true;
-
-                if (tasks.Contains(next)) return false;
-
-                tasks.Add(next);
-                next = next.data.Next;
-            }
-
-            return false;
+            return state.IsActive;
         }
     }
 }

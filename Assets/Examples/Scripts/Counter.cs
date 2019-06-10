@@ -12,11 +12,11 @@ namespace Momentum.Tests
         {
             Task.Run(this.GetTaskable())
                 .Name(string.Format("Counter[{0}]", time))
-                .Time(time)
+                .Duration(time)
                 .Loop()
                 .OnStart(data => text.text = data.CurrentLoop.ToString())
                 .OnUpdate(data => text.transform.localScale = Vector3.one * (Ease.InOutSine(data.Progress * 2f) + 1))
-                .OnRepeat(data => text.text = data.CurrentLoop.ToString());
+                .OnLoop(data => text.text = data.CurrentLoop.ToString());
         }
 
         /*
